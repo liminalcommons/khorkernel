@@ -1,0 +1,125 @@
+# Playwright Test Configuration
+
+import pytest
+from playwright.sync_api import sync_playwright, Browser, BrowserContext, Page
+import os
+from typing import Dict, Any, Generator
+from pathlib import Path
+from datetime import datetime
+
+# Import our config
+from .playwright.config import browser_configs, BASE_URL, SCREENSHOT_DIR, TRACE_DIR, VIDEO_DIR
+
+# Fixtures for browser, context and page
+@pytest.fixture(scope="session")
+def browser_type_launch_args(pytestconfig) -> Dict[str, Any]:
+    """Get browser configuration based on CLI options."""
+    browser = pytestconfig.getoption("--browser")
+    headed = pytestconfig.getoption("--headed")
+    slowmo = pytestconfig.getoption("--slowmo")
+    
+    # Start with the default config
+    config = browser_configs.get(browser, browser_configs["chromium"]).copy()
+    
+    # Override with CLI arguments if provided
+    if headed:
+        config["headless"] = False
+    
+    if slowmo:
+        config["slow_mo"] = int(slowmo)
+    
+    return config
+
+@pytest.fixture(scope="session")
+def browser(playwright, browser_type_launch_args, pytestconfig) -> Generator[Browser, None, None]:
+    """Launch browser based on CLI arguments."""
+    browser_name = pytestconfig.getoption("--browser")
+    browser_type = getattr(playwright, browser_name)
+    
+    browser_instance = browser_type.launch(**browser_type_launch_args)
+    yield browser_instance
+    browser_instance.close()
+
+@pytest.fixture
+def context(browser, browser_type_launch_args, request) -> Generator[BrowserContext, None, None]:
+    """Create a browser context with default configuration."""
+    device = request.config.getoption("--device")
+    
+    context_args = {}
+    
+    # Handle device emulation
+    if device:
+        device_config = playwright.devices.get(device)
+        if device_config:
+            context_args.update(device_config)
+    else:
+        # Only apply viewport if not using a device
+        if "viewport" in browser_type_launch_args:
+            context_args["viewport"] = browser_type_launch_args["viewport"]
+    
+    # Screenshots and video recording
+    if browser_type_launch_args.get("screenshot") == "on":
+        context_args["record_video_dir"] = VIDEO_DIR
+    
+    context_instance = browser.new_context(**context_args)
+    
+    # Start tracing if needed
+    if browser_type_launch_args.get("trace") == "on":
+        context_instance.tracing.start(screenshots=True, snapshots=True)
+    
+    yield context_instance
+    
+    # Handle tracing closure
+    if browser_type_launch_args.get("trace") in ["on", "retain-on-failure"]:
+        trace_path = Path(TRACE_DIR) / f"trace-{datetime.now().strftime('%Y%m%d-%H%M%S')}.zip"
+        context_instance.tracing.stop(path=trace_path)
+    
+    context_instance.close()
+
+@pytest.fixture
+def page(context) -> Generator[Page, None, None]:
+    """Create a page with default URL."""
+    page_instance = context.new_page()
+    page_instance.goto(BASE_URL)
+    yield page_instance
+    page_instance.close()
+
+# Fixtures for commonly used pages
+@pytest.fixture
+def home_page(page) -> Generator[Page, None, None]:
+    """Navigate to the home page."""
+    page.goto(f"{BASE_URL}/")
+    yield page
+
+@pytest.fixture
+def login_page(page) -> Generator[Page, None, None]:
+    """Navigate to the login page."""
+    page.goto(f"{BASE_URL}/login")
+    yield page
+
+# Add hooks for test result handling
+@pytest.hookimpl(tryfirst=True, hookwrapper=True)
+def pytest_runtest_makereport(item, call):
+    """Take screenshot and save trace on test failure."""
+    outcome = yield
+    result = outcome.get_result()
+    
+    # Only handle call phase
+    if result.when != "call":
+        return
+    
+    # Get the page fixture if available
+    page = None
+    for fixture_name in ["page", "home_page", "login_page"]:
+        if fixture_name in item.fixturenames:
+            page = item.funcargs[fixture_name]
+            break
+    
+    if page and result.failed:
+        # Take screenshot on failure
+        screenshot_path = Path(SCREENSHOT_DIR) / f"{item.name}-failure.png"
+        page.screenshot(path=screenshot_path)
+        result.screenshot = screenshot_path
+        
+        # Add to the report for visibility
+        result.extra = [{"screenshot": str(screenshot_path)}] 

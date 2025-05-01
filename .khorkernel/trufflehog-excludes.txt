@@ -1,0 +1,49 @@
+# Khora Kernel TruffleHog Excludes
+# Patterns for excluding known false positives
+
+# Exclude test files and fixtures
+.*/test_.*\.py
+.*/tests/fixtures/.*
+.*/tests/data/.*
+
+# Exclude documentation
+.*/docs/.*\.md$
+README\.md$
+
+# Exclude example files
+.*/examples/.*
+
+# Exclude kernel internal paths where we know secrets are example placeholders
+.khorkernel/.*
+
+# Exclude build artifacts
+.*/dist/.*
+.*/build/.*
+.*\.egg-info/.*
+
+# Exclude Git internals
+\.git/.*
+
+# Exclude common package management files
+package-lock\.json$
+yarn\.lock$
+poetry\.lock$
+
+# Exclude logs
+.*\.log$
+
+# Exclude cache directories
+.*__pycache__/.*
+\.pytest_cache/.*
+\.mypy_cache/.*
+\.ruff_cache/.*
+
+# Exclude environment files (but keep checking .env files - those should be real secrets!)
+\.venv/.*
+\.env\.example$
+\.env\.sample$
+
+# Exclude Docker Compose files (we handle security separately with gen_secure_creds.py)
+docker-compose\.yml$
+docker-compose\.yaml$
+docker-compose\.override\.yml$

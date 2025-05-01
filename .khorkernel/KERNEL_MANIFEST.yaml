@@ -1,0 +1,57 @@
+# Khora Kernel Manifest v1.0.2
+# Configure your project's core features, paths, and ports here.
+# This file drives the generation of CI pipelines, Docker Compose, and context.
+
+# --- Project Metadata ---
+project: my-new-app             # Used for image names, database names, etc. (use kebab-case)
+project_description: "A brief description of my awesome new application." # For READMEs, etc.
+
+# --- Feature Toggles ---
+features:
+  # Choose the inter-service communication method (if needed beyond direct HTTP)
+  broker: redis                 # Options: redis | listen_notify (Postgres) | none
+  # Choose the primary database
+  database: postgres            # Options: postgres | sqlite | none
+  # Enable/disable observability stack (Prometheus, Grafana - via Compose, OTEL collector placeholder)
+  observability: true           # Options: true | false
+  # Enable/disable security scanning gates in CI (pip-audit, bandit, trufflehog)
+  security_gates: true          # Options: true | false
+  # Lightweight mode for compose - use with --profile=lite flag
+  lite_mode_available: true     # Generate docker-compose.lite.yml?
+
+# --- Code & File Paths ---
+# Relative paths from the repository root where key components live.
+# Used by CI, Docker builds, and scripts.
+paths:
+  api_dir: src/app/api          # Directory containing the main API service code (e.g., FastAPI)
+  worker_dir: src/app/worker    # Directory containing background worker code (e.g., Celery, RQ)
+  docs_dir: docs                # Directory containing primary documentation (scanned by populate_kg)
+  # Add other key directories if needed by your structure
+
+# --- Network Ports ---
+# Default ports exposed by services in Docker Compose.
+ports:
+  http: 8000                    # Default port for the API service
+  # Add other ports if needed (e.g., Grafana: 3000, Prometheus: 9090)
+
+# --- Bounded Contexts (Optional but Recommended for AI) ---
+# Define the high-level domains or services within your application.
+# This feeds into context.yaml for better AI understanding.
+bounded_contexts:
+  - id: core_api                # Unique identifier for the context
+    name: "Core API"            # Human-readable name
+    description: "Handles primary user interactions and business logic."
+    path: src/app/api           # Corresponding code path
+    container_service: api      # Name of the Docker Compose service
+  - id: background_tasks
+    name: "Background Tasks"
+    description: "Manages asynchronous jobs and processing."
+    path: src/app/worker
+    container_service: worker
+  # Add more contexts as your application grows
+
+# --- Plugin Configuration ---
+# List activated plugins that should be included during bootstrap
+plugins:
+  # - terraform      # Uncomment to activate Terraform infrastructure scaffolding
+  # - playwright     # Uncomment to activate Playwright testing scaffolding

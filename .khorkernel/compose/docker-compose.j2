@@ -1,0 +1,209 @@
+# Khora Kernel - Docker Compose Configuration (Generated from docker-compose.j2)
+# Defines local development/testing environment based on KERNEL_MANIFEST.yaml
+version: '3.8'
+
+services:
+  # --- API Service ---
+  api:
+    build:
+      context: {{ (paths.api_dir | default('src/app/api')).replace('\\', '/') }}
+      dockerfile: Dockerfile
+    image: "{{ project }}-api:local"
+    container_name: "{{ project }}-api"
+    ports:
+      - "{{ ports.http }}:{{ ports.http }}"
+    environment:
+      # --- Standard Environment Variables ---
+      - PORT={{ ports.http }}
+      - ENVIRONMENT=development
+      # --- Database Connection (if applicable) ---
+{% if features.database == 'postgres' %}
+      - DATABASE_URL=postgresql://{{ project }}_user:{{ project }}_password@db:5432/{{ project }}_db
+{% elif features.database == 'sqlite' %}
+      - DATABASE_URL=sqlite:////app/data/local.db # Path inside container volume
+{% endif %}
+      # --- Broker Connection (if applicable) ---
+{% if features.broker == 'redis' %}
+      - REDIS_URL=redis://redis:6379/0
+{% elif features.broker == 'listen_notify' %}
+      # LISTEN/NOTIFY uses the DATABASE_URL
+{% endif %}
+      # --- Observability (if applicable) ---
+{% if features.observability %}
+      - OTEL_EXPORTER_OTLP_ENDPOINT=http://otel-collector:4317
+      - OTEL_SERVICE_NAME={{ project }}-api
+{% endif %}
+      # --- Add other API-specific environment variables ---
+      # - MY_API_KEY="your_development_key" # Ensure complex values are quoted
+    volumes:
+      # Mount source code for hot-reloading (ensure forward slashes)
+      - ./{{ (paths.api_dir | default('src/app/api')).replace('\\', '/') }}:/app
+{% if features.database == 'sqlite' %}
+      # Mount volume for SQLite file directory
+      - db-data:/app/data
+{% endif %}
+    depends_on:
+{% if features.database == 'postgres' %}
+      db: { condition: service_healthy }
+{% endif %}
+{% if features.broker == 'redis' %}
+      redis: { condition: service_healthy } # Use healthy now
+{% endif %}
+    networks:
+      - default_net
+    # Assign to default profile (runs in regular and 'lite' profiles)
+    profiles: 
+      - default
+      - lite
+
+  # --- Worker Service ---
+  worker:
+    build:
+      context: {{ (paths.worker_dir | default('src/app/worker')).replace('\\', '/') }}
+      dockerfile: Dockerfile
+    image: "{{ project }}-worker:local"
+    container_name: "{{ project }}-worker"
+    environment:
+      - ENVIRONMENT=development
+{% if features.database == 'postgres' %}
+      - DATABASE_URL=postgresql://{{ project }}_user:{{ project }}_password@db:5432/{{ project }}_db
+{% elif features.database == 'sqlite' %}
+      - DATABASE_URL=sqlite:////app/data/local.db
+{% endif %}
+{% if features.broker == 'redis' %}
+      - REDIS_URL=redis://redis:6379/0
+{% elif features.broker == 'listen_notify' %}
+      # LISTEN/NOTIFY uses the DATABASE_URL
+{% endif %}
+{% if features.observability %}
+      - OTEL_EXPORTER_OTLP_ENDPOINT=http://otel-collector:4317
+      - OTEL_SERVICE_NAME={{ project }}-worker
+{% endif %}
+      # --- Add other Worker-specific environment variables ---
+    volumes:
+      - ./{{ (paths.worker_dir | default('src/app/worker')).replace('\\', '/') }}:/app
+{% if features.database == 'sqlite' %}
+      - db-data:/app/data
+{% endif %}
+    depends_on:
+{% if features.database == 'postgres' %}
+      db: { condition: service_healthy }
+{% endif %}
+{% if features.broker == 'redis' %}
+      redis: { condition: service_healthy } # Use healthy now
+{% endif %}
+    networks:
+      - default_net
+    # Assign to default profile (runs in regular and 'lite' profiles)
+    profiles: 
+      - default
+      - lite
+
+{% if features.database == 'postgres' %}
+  # --- PostgreSQL Database ---
+  db:
+    image: postgres:15
+    container_name: "{{ project }}-db"
+    environment:
+      # Use explicit vars for clarity and quoting safety
+      - POSTGRES_DB="{{ project }}_db"
+      - POSTGRES_USER="{{ project }}_user"
+      - POSTGRES_PASSWORD="{{ project }}_password" # Use secrets in production!
+    volumes:
+      - db-data:/var/lib/postgresql/data
+    ports:
+      - "5432:5432" # Optional: Expose for local debugging
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U {{ project }}_user -d {{ project }}_db"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - default_net
+    # Assign to default profile only (not in 'lite' profile)
+    profiles: 
+      - default
+{% endif %}
+
+{% if features.broker == 'redis' %}
+  # --- Redis Broker/Cache ---
+  redis:
+    image: redis:7
+    container_name: "{{ project }}-redis"
+    ports:
+      - "6379:6379" # Optional: Expose for local debugging
+    healthcheck: # Added healthcheck
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+    networks:
+      - default_net
+    # Assign to default profile only (not in 'lite' profile)
+    profiles: 
+      - default
+{% endif %}
+
+{% if features.observability %}
+  # --- Observability Stack ---
+  prometheus:
+    image: prom/prometheus:latest
+    container_name: "{{ project }}-prometheus"
+    volumes:
+      # Ensure prometheus.yml exists at the project root or adjust path
+      - ./prometheus.yml:/etc/prometheus/prometheus.yml
+    ports:
+      - "9090:9090"
+    networks:
+      - default_net
+    # Add depends_on if needed (e.g., depends on otel-collector)
+    # Assign to default profile only (not in 'lite' profile)
+    profiles: 
+      - default
+
+  otel-collector:
+    image: otel/opentelemetry-collector-contrib:latest
+    container_name: "{{ project }}-otel-collector"
+    volumes:
+      # Ensure otel-collector-config.yaml exists at the project root or adjust path
+      - ./otel-collector-config.yaml:/etc/otel-collector-config.yaml
+    command: ["--config=/etc/otel-collector-config.yaml"]
+    ports:
+      - "4317:4317" # OTLP gRPC
+      - "4318:4318" # OTLP HTTP
+    networks:
+      - default_net
+    # Add depends_on if needed (e.g., depends on backend storage)
+    # Assign to default profile only (not in 'lite' profile)
+    profiles: 
+      - default
+
+  # Optional: Add Grafana here if desired
+  grafana:
+    image: grafana/grafana-oss:latest
+    container_name: "{{ project }}-grafana"
+    ports:
+      - "3000:3000"
+    volumes:
+      - grafana-data:/var/lib/grafana
+      # Add provisioning files for datasources/dashboards if needed
+    networks:
+      - default_net
+    # Assign to default profile only (not in 'lite' profile)
+    profiles: 
+      - default
+{% endif %}
+
+# --- Volumes ---
+volumes:
+{% if features.database == 'postgres' or features.database == 'sqlite' %}
+  db-data: # Used for Postgres data dir or SQLite file dir
+{% endif %}
+{% if features.observability %}
+  grafana-data: # Used for Grafana data
+{% endif %}
+
+# --- Networks ---
+networks:
+  default_net:
+    driver: bridge

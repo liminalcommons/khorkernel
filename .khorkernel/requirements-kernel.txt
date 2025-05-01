@@ -1,0 +1,8 @@
+# Khora Kernel Core Dependencies
+# Pinned versions ensure consistent bootstrapping
+jinja2==3.1.2
+pyyaml==6.0.1
+jsonschema==4.19.1
+# Optional - used by render_kg.py if available
+# graphviz==0.20.1
+# rich==13.6.0

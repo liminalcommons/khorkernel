@@ -1,0 +1,135 @@
+# Khora Kernel - Main CI Workflow (Generated from ci.j2)
+# Runs linters, type checkers, security scanners, and kernel scripts.
+name: Build and Test
+
+on:
+  push:
+    branches: [ main ] # Adjust branches as needed
+  pull_request:
+    branches: [ main ] # Adjust branches as needed
+
+jobs:
+  lint-scan-test:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false # Allow other OS jobs to complete if one fails
+      matrix:
+        os: [ubuntu-latest, windows-latest, macos-latest]
+        # Optionally add python-version matrix if needed
+        # python-version: ['3.9', '3.10', '3.11']
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          # Ensure this meets the minimum required by your scripts (e.g., 3.8 for walrus)
+          python-version: '3.10'
+          cache: 'pip'
+
+      - name: Install kernel dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r .khorkernel/requirements-kernel.txt
+          pip install ruff mypy pip-audit bandit # Core checking tools
+          # Install project dependencies (adjust path to your requirements file)
+          # pip install -r requirements.txt
+          # pip install -r requirements-dev.txt # Or dev dependencies
+
+      - name: Lint with Ruff
+        run: ruff check .
+
+      - name: Check types with MyPy
+        # Adjust paths to be type-checked as needed
+        run: |
+          mypy {{ (paths.api_dir | default('src/app/api')).replace('\\', '/') }} --ignore-missing-imports
+          mypy {{ (paths.worker_dir | default('src/app/worker')).replace('\\', '/') }} --ignore-missing-imports
+          # Add other directories if needed: mypy src/libs --ignore-missing-imports
+
+{% if features.security_gates %}
+      - name: Audit dependencies with pip-audit
+        # On non-Linux, ignore exit code 1 which might occur if OpenSSL etc. are missing, even if no vulns.
+        # On Linux, fail on any non-zero exit code.
+        run: |
+          pip-audit || ([ $? -eq 1 ] && [[ "${{ runner.os }}" != "Linux" ]])
+        shell: bash
+
+      - name: Scan code with Bandit
+        # Scan specific code directories. Ignore assert (B101) and random (B311 - often used in tests).
+        run: |
+          bandit -r {{ (paths.api_dir | default('src/app/api')).replace('\\', '/') }} -q -lll -s B101,B311
+          bandit -r {{ (paths.worker_dir | default('src/app/worker')).replace('\\', '/') }} -q -lll -s B101,B311
+          # Add other directories if needed
+{% endif %}
+
+      # Add your project's specific test commands here, e.g.:
+      # - name: Run unit tests
+      #   run: pytest tests/unit
+
+      # --- Kernel Context Generation ---
+      - name: Populate Knowledge Graph
+        run: python .khorkernel/scripts/populate_kg.py
+
+      - name: Generate Context YAML
+        run: python .khorkernel/scripts/gen_context.py
+
+      - name: Validate Context Schema
+        run: python -c "
+          import json, jsonschema, yaml;
+          ctx = yaml.safe_load(open('.khora/context.yaml'));
+          schema = json.load(open('.khorkernel/schema/context_schema.json'));
+          jsonschema.validate(ctx, schema);
+          print('Context schema validation successful!')
+          "
+
+      - name: Upload context.yaml artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: context-yaml-${{ matrix.os }} # Include OS in name for clarity
+          path: .khora/context.yaml
+
+{% for plugin in plugins %}
+      # --- Plugin-specific CI steps for {{ plugin }} ---
+{% if plugin == 'terraform' %}
+      - name: Terraform Format
+        if: runner.os == 'Linux'
+        uses: hashicorp/terraform-github-actions@v0.8.0
+        with:
+          tf_actions_version: latest
+          tf_actions_subcommand: 'fmt'
+          tf_actions_working_dir: 'infra/terraform'
+          tf_actions_comment: false
+      
+      - name: Terraform Init
+        if: runner.os == 'Linux'
+        uses: hashicorp/terraform-github-actions@v0.8.0
+        with:
+          tf_actions_version: latest
+          tf_actions_subcommand: 'init'
+          tf_actions_working_dir: 'infra/terraform'
+          tf_actions_comment: false
+
+      - name: Terraform Validate
+        if: runner.os == 'Linux'
+        uses: hashicorp/terraform-github-actions@v0.8.0
+        with:
+          tf_actions_version: latest
+          tf_actions_subcommand: 'validate'
+          tf_actions_working_dir: 'infra/terraform'
+          tf_actions_comment: false
+{% endif %}
+{% if plugin == 'playwright' %}
+      - name: Install Playwright
+        if: runner.os == 'Linux'
+        run: |
+          pip install playwright
+          playwright install
+          
+      - name: Run Playwright Tests (if available)
+        if: runner.os == 'Linux' && hashFiles('tests/ui/**/*.py') != ''
+        run: python -m playwright test
+        continue-on-error: true  # Optional: if tests aren't yet stable
+{% endif %}
+{% endfor %}
