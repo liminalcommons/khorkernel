@@ -118,8 +118,7 @@ jobs:
                       f.write("> These changes may affect AI partner understanding of your project. [Learn more](https://github.com/your-org/khora-kernel)")
                   
                   # Set has_changes flag for GitHub actions
-                  with open(f"{"/".join(github.output.replace("{", "").replace("}", "").split("/")[:-1])}", "a") as f:
-                      f.write("has_changes=true\n")
+                  print("Setting has_changes=true")
               else:
                   # No meaningful differences
                   with open("context_diff.md", "w") as f:
@@ -127,8 +126,7 @@ jobs:
                       f.write("The structure of `.khora/context.yaml` remains consistent, only timestamps or other non-semantic elements changed.\n")
                   
                   # Set has_changes flag for GitHub actions
-                  with open(f"{"/".join(github.output.replace("{", "").replace("}", "").split("/")[:-1])}", "a") as f:
-                      f.write("has_changes=false\n")
+                  print("Setting has_changes=false")
                   
           except Exception as e:
               # Handle errors (file not found, invalid YAML, etc.)
@@ -137,8 +135,7 @@ jobs:
                   f.write(f"An error occurred while comparing context files: {str(e)}\n")
               
               # Set error flag for GitHub actions
-              with open(f"{"/".join(github.output.replace("{", "").replace("}", "").split("/")[:-1])}", "a") as f:
-                  f.write("has_error=true\n")
+              print("Setting has_error=true")
           ' || echo "Failed to generate diff"
           
           # Create output variables for the next steps
