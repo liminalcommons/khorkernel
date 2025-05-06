@@ -1,49 +1,17 @@
 # Khora Kernel TruffleHog Excludes
-# Patterns for excluding known false positives
-
-# Exclude test files and fixtures
-.*/test_.*\.py
-.*/tests/fixtures/.*
-.*/tests/data/.*
-
-# Exclude documentation
-.*/docs/.*\.md$
-README\.md$
-
-# Exclude example files
-.*/examples/.*
-
-# Exclude kernel internal paths where we know secrets are example placeholders
-.khorkernel/.*
-
-# Exclude build artifacts
-.*/dist/.*
-.*/build/.*
-.*\.egg-info/.*
-
-# Exclude Git internals
-\.git/.*
-
-# Exclude common package management files
-package-lock\.json$
-yarn\.lock$
-poetry\.lock$
-
-# Exclude logs
-.*\.log$
-
-# Exclude cache directories
-.*__pycache__/.*
-\.pytest_cache/.*
-\.mypy_cache/.*
-\.ruff_cache/.*
-
-# Exclude environment files (but keep checking .env files - those should be real secrets!)
-\.venv/.*
-\.env\.example$
-\.env\.sample$
-
-# Exclude Docker Compose files (we handle security separately with gen_secure_creds.py)
-docker-compose\.yml$
-docker-compose\.yaml$
-docker-compose\.override\.yml$
+# This file contains patterns for excluding false positives from TruffleHog security scans.
+# 
+# HOW TO USE:
+# Add patterns (one per line) to exclude specific paths or files where you know
+# the detected "secrets" are actually just examples, test data, or other non-sensitive content.
+#
+# FORMAT:
+# Each line should be a regular expression pattern. Any file path matching the pattern will be skipped.
+#
+# EXAMPLES:
+# tests/fixtures/.*          # Skip all files in tests/fixtures directory
+# .*\.example$               # Skip files with .example extension
+# docs/samples/config\.json  # Skip a specific file
+#
+# NOTE: Be careful not to exclude actual secrets! Only add patterns for known false positives.
+# See https://github.com/trufflesecurity/trufflehog for more details on pattern syntax.
