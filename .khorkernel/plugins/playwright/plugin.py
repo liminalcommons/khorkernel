@@ -101,7 +101,7 @@ os.makedirs(VIDEO_DIR, exist_ok=True)
     
     # 2. conftest.py
     # Load the template
-    conftest_template = jinja_env.get_template("conftest.py.j2")
+    conftest_template = jinja_env.get_template("templates/conftest.py.j2")
     # Render the template (no variables needed for now)
     conftest_content_rendered = conftest_template.render()
     # Write the rendered content
