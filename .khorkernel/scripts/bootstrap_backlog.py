@@ -27,7 +27,7 @@ OUTPUT_COMPOSE_FILE = "docker-compose.yml"
 LITE_COMPOSE_FILE = "docker-compose.lite.yml"
 OUTPUT_CONTEXT_DELTA_FILE = "context-delta.yml"
 GITIGNORE_FILE = ".gitignore"
-KERNEL_IGNORES = ['.khora/', 'kg/', '*.pyc', '__pycache__/']
+KERNEL_IGNORES = ['.khora/', '.khora', 'kg/', '*.pyc', '__pycache__/']
 REQUIREMENTS_FILE = "requirements-kernel.txt"
 VERSION_FILE = "VERSION"
 
