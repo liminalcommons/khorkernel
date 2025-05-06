@@ -76,7 +76,7 @@ KG_CONCEPTS = ROOT / "kg/concepts.json"
 KG_RULES = ROOT / "kg/rules.json"
 KG_SCHEMA = KERNEL / "schema/kg_schema.json"
 
-OUT_DEFAULT = ROOT / "khora_report.md"
+OUT_DEFAULT = ROOT / "reports/repo_inspect_report.md"
 EXCLUDE_DIRS_DEFAULT = {
     ".git",
     ".hg",

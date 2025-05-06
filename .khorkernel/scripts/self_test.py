@@ -57,21 +57,21 @@ def run_self_test():
 def main():
     """Parse arguments and run the self test."""
     parser = argparse.ArgumentParser(description="Khora Kernel self-test")
-    parser.add_argument("--out", help="Write output to specified file")
+    parser.add_argument("--out", default="reports/self_test_results.txt", 
+                        help="Write output to specified file (default: reports/self_test_results.txt)")
     args = parser.parse_args()
     
     success = run_self_test()
     
-    # Write to output file if specified
-    if args.out:
-        out_path = pathlib.Path(args.out).expanduser()
-        out_path.parent.mkdir(parents=True, exist_ok=True)
-        try:
-            with open(out_path, 'w', encoding='utf-8') as f:
-                f.write('\n'.join(output_lines))
-            print(f"✓ Test results written to {out_path.relative_to(ROOT) if out_path.is_relative_to(ROOT) else out_path}")
-        except Exception as e:
-            print(f"Error writing to output file: {e}", file=sys.stderr)
+    # Always write to output file
+    out_path = pathlib.Path(args.out).expanduser()
+    out_path.parent.mkdir(parents=True, exist_ok=True)
+    try:
+        with open(out_path, 'w', encoding='utf-8') as f:
+            f.write('\n'.join(output_lines))
+        print(f"✓ Test results written to {out_path.relative_to(ROOT) if out_path.is_relative_to(ROOT) else out_path}")
+    except Exception as e:
+        print(f"Error writing to output file: {e}", file=sys.stderr)
     
     sys.exit(0 if success else 1)
 
