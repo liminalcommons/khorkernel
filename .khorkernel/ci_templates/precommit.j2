@@ -37,6 +37,7 @@ repos:
         name: TruffleHog (Scan for secrets)
         args: [--fail, --exclude-paths=.khorkernel/trufflehog-excludes.txt] # Exclude known false positives
 
+{% if features.security_gates %}
   # Bandit can be noisy in pre-commit; often better suited for CI.
   # Uncomment if you want it here.
   # - repo: https://github.com/PyCQA/bandit
@@ -46,6 +47,7 @@ repos:
   #       name: Bandit (Scan for common security issues)
   #       args: ["-c", "pyproject.toml"] # Optional: Use config file
   #       # Exclude test directories if needed: --exclude=./tests
+{% endif %}
 
   # --- Type Checking (Optional, can be slow) ---
   # Uncomment if you want MyPy in pre-commit. Often better in CI.

@@ -390,6 +390,9 @@ def main():
     render_template(jinja_env, "ci/ci.j2", manifest, workflow_out_dir / "ci.yml")
     render_template(jinja_env, "ci/docker-build.j2", manifest, workflow_out_dir / "docker-build.yml")
     render_template(jinja_env, "ci/context-delta.yml", manifest, workflow_out_dir / "context-delta.yml")
+    
+    # 4. Pre-commit config
+    render_template(jinja_env, "ci_templates/precommit.j2", manifest, project_root / ".pre-commit-config.yaml")
 
     # --- Process Plugins ---
     active_plugins = manifest.get("plugins", [])
