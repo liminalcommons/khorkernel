@@ -1,0 +1,3 @@
+fastapi
+uvicorn[standard]
+# Add other API-specific dependencies here

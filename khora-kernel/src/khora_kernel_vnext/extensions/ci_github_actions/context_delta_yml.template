@@ -1,0 +1,162 @@
+name: Khora Context Delta for ${project_name}
+
+on:
+  pull_request:
+    paths:
+      - '.khora/context.yaml'
+
+jobs:
+  analyze-context-changes:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+
+      - name: Set up Python ${python_version}
+        uses: actions/setup-python@v3
+        with:
+          python-version: ${python_version}
+
+      - name: Install uv
+        run: |
+          curl -LsSf https://astral.sh/uv/install.sh | sh
+          echo "$${HOME_PATH}/.cargo/bin" >> $${GITHUB_PATH}
+
+      - name: Install dependencies
+        run: |
+          uv pip install pyyaml
+
+      - name: Analyze context changes
+        id: context_analysis
+        run: |
+          # Get the PR base ref (target branch)
+          BASE_REF=$${{ github.base_ref }}
+          
+          # Check if the target exists in local git
+          if ! git rev-parse --verify origin/$$BASE_REF ; then
+            echo "Cannot find origin/$$BASE_REF, using default branch instead"
+            BASE_REF=$$(git remote show origin | grep 'HEAD branch' | cut -d' ' -f5)
+          fi
+          
+          echo "Analyzing context changes between origin/$$BASE_REF and current PR"
+          
+          # Extract the context files
+          CURRENT_CONTEXT_FILE=.khora/context.yaml
+          BASE_CONTEXT_FILE=/tmp/base_context.yaml
+          
+          # Get the base context file
+          git show origin/$$BASE_REF:$$CURRENT_CONTEXT_FILE > $$BASE_CONTEXT_FILE || echo "No base context file found, this might be a new file"
+          
+          # Create Python script to analyze differences
+          cat > analyze_context.py << 'EOF'
+          import yaml
+          import sys
+          import os
+          
+          def load_yaml(file_path):
+              if not os.path.exists(file_path):
+                  return {}
+              with open(file_path, 'r') as f:
+                  try:
+                      return yaml.safe_load(f) or {}
+                  except yaml.YAMLError:
+                      return {}
+          
+          # Load context files
+          current = load_yaml(sys.argv[1])
+          base = load_yaml(sys.argv[2])
+          
+          # Analyze changes
+          summary = []
+          
+          # Check kernel info changes
+          if current.get('kernel_info', {}) != base.get('kernel_info', {}):
+              current_kernel = current.get('kernel_info', {})
+              base_kernel = base.get('kernel_info', {})
+              
+              # Version change
+              if current_kernel.get('version') != base_kernel.get('version'):
+                  summary.append(f"- Kernel version changed: {base_kernel.get('version', 'N/A')} -> {current_kernel.get('version', 'N/A')}")
+              
+              # Schema change
+              if current_kernel.get('schema_version') != base_kernel.get('schema_version'):
+                  summary.append(f"- Schema version changed: {base_kernel.get('schema_version', 'N/A')} -> {current_kernel.get('schema_version', 'N/A')}")
+          
+          # Check project info changes
+          if current.get('project_info', {}) != base.get('project_info', {}):
+              current_project = current.get('project_info', {})
+              base_project = base.get('project_info', {})
+              
+              for key in set(list(current_project.keys()) + list(base_project.keys())):
+                  if current_project.get(key) != base_project.get(key):
+                      summary.append(f"- Project info '{key}' changed: {base_project.get(key, 'N/A')} -> {current_project.get(key, 'N/A')}")
+          
+          # Check features changes
+          if current.get('features', {}) != base.get('features', {}):
+              current_features = current.get('features', {})
+              base_features = base.get('features', {})
+              
+              # Added features
+              new_features = [f for f in current_features if f not in base_features]
+              if new_features:
+                  summary.append(f"- Added features: {', '.join(new_features)}")
+              
+              # Removed features
+              removed_features = [f for f in base_features if f not in current_features]
+              if removed_features:
+                  summary.append(f"- Removed features: {', '.join(removed_features)}")
+              
+              # Changed feature values
+              for feature in set(current_features.keys()) & set(base_features.keys()):
+                  if current_features[feature] != base_features[feature]:
+                      summary.append(f"- Feature '{feature}' changed: {base_features[feature]} -> {current_features[feature]}")
+          
+          # Check knowledge_graph changes if present
+          if 'knowledge_graph' in current or 'knowledge_graph' in base:
+              if current.get('knowledge_graph', {}) != base.get('knowledge_graph', {}):
+                  current_kg = current.get('knowledge_graph', {})
+                  base_kg = base.get('knowledge_graph', {})
+                  
+                  # Check concepts count
+                  current_concept_count = len(current_kg.get('concepts', []))
+                  base_concept_count = len(base_kg.get('concepts', []))
+                  if current_concept_count != base_concept_count:
+                      summary.append(f"- Concepts count changed: {base_concept_count} -> {current_concept_count}")
+                  
+                  # Check rules count
+                  current_rules_count = len(current_kg.get('rules', []))
+                  base_rules_count = len(base_kg.get('rules', []))
+                  if current_rules_count != base_rules_count:
+                      summary.append(f"- Rules count changed: {base_rules_count} -> {current_rules_count}")
+              
+          # Generate summary
+          if not summary:
+              summary = ["No significant changes detected in context.yaml"]
+          
+          # Output for GitHub Actions
+          print("::set-output name=changes::{}".format("\n".join(summary)))
+          print("\n".join(summary))
+          EOF
+          
+          # Run the analysis
+          python analyze_context.py $$CURRENT_CONTEXT_FILE $$BASE_CONTEXT_FILE
+          
+          # Clean up
+          rm analyze_context.py
+
+      - name: Comment on PR
+        uses: actions/github-script@v6
+        with:
+          script: |
+            const changes = process.env.CONTEXT_CHANGES;
+            
+            github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: `## Khora Context Changes\n\n$${changes}\n\nThese changes to \`.khora/context.yaml\` may affect how AI agents understand your project.`
+            });
+        env:
+          CONTEXT_CHANGES: $${{ steps.context_analysis.outputs.changes }}

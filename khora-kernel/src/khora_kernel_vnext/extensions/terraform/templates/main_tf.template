@@ -1,0 +1,35 @@
+# Main Terraform configuration for ${project_name}
+# This is the root configuration that references modules and creates resources
+
+# Reference to module examples (uncomment and customize as needed)
+/*
+module "networking" {
+  source = "./modules/networking"
+  
+  project_name = var.project_name
+  environment  = var.environment
+}
+
+module "compute" {
+  source = "./modules/compute"
+  
+  project_name = var.project_name
+  environment  = var.environment
+  depends_on   = [module.networking]
+}
+*/
+
+# Local variables
+locals {
+  common_tags = {
+    Project     = var.project_name
+    Environment = var.environment
+    ManagedBy   = "terraform"
+  }
+}
+
+# Example resource (customize based on your cloud provider)
+resource "local_file" "info" {
+  content  = "This is a placeholder resource for ${project_name}"
+  filename = "$${path.module}/terraform-info.txt"
+}

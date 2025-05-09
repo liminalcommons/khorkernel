@@ -1,0 +1,297 @@
+{
+  "description": "Phase 1 (MVK v0.1) Development Tickets for Khora Kernel vNext (PyScaffold Adaptation) - REVISED post-testing v4",
+  "tickets": [
+    {
+      "id": "MVK-META-01",
+      "title": "Setup: Establish Khora Kernel vNext Development Environment",
+      "type": "Task",
+      "scope": ["Meta-Evolutionary", "DevRelSecOps (Kernel)"],
+      "description": "As a Kernel Developer, I need a standardized development environment for the 'khora-kernel-vnext' project itself, so that core development can begin with best practices applied.",
+      "acceptance_criteria": [
+        "A new Git repository `khora-kernel-vnext` is initialized.",
+        "`uv init` is run, creating `pyproject.toml` and `.venv`.",
+        "A standard Python source layout (`src/khora_kernel_vnext/`) is created.",
+        "Core runtime (`pyyaml`, `jinja2`, `typer`, `pyscaffold`, `pydantic`) and dev (`pytest`, `ruff`, `black`, `mypy`, `pre-commit`, `tomlkit`, `pytest-cov`) dependencies are added via `uv pip install`.",
+        "Tooling (`ruff`, `black`, `mypy`, `pytest`) is configured in `pyproject.toml`.",
+        "A basic `.pre-commit-config.yaml` is created for the kernel's own code quality.",
+        "A minimal GitHub Actions workflow (`.github/workflows/kernel-ci.yml`) is created to run linting, type checks, and tests for the kernel.",
+        "An initial `.gitignore` is present.",
+        "An initial `VERSION` file (e.g., in `src/khora_kernel_vnext/_internal/`) is created with `0.1.0-alpha`.",
+        "All initial files are committed to Git."
+      ],
+      "dependencies": [],
+      "status": "completed",
+      "completion_date": "2025-05-07",
+      "next_task_prompt": "Environment setup complete."
+    },
+    {
+      "id": "MVK-CORE-01",
+      "title": "Core Extension: Define and Parse Minimal Khora Manifest Structure",
+      "type": "Feature",
+      "scope": ["Meta-Evolutionary", "DevRelSecOps (Target)"],
+      "description": "As a Kernel Developer, I need to define the minimal `[tool.khora]` structure in `pyproject.toml` for the MVK and implement parsing logic within the core extension, so that the kernel can understand the user's basic project configuration.",
+      "acceptance_criteria": [
+        "A clear TOML structure for `[tool.khora]` covering MVK fields is defined.",
+        "A Python function/class within `khora-core-extension` parses the `pyproject.toml` file and extracts the `[tool.khora]` section.",
+        "The parser validates the presence of required MVK fields.",
+        "The parser handles missing optional fields gracefully.",
+        "The parser converts values to appropriate types.",
+        "Appropriate errors are raised if required fields are missing or invalid.",
+        "Unit tests *pass* verifying parsing of valid and invalid MVK manifest snippets (Verified by completion of FIX-TEST-CORE-01)."
+      ],
+      "dependencies": ["MVK-META-01", "FIX-TEST-CORE-01"],
+      "status": "completed",
+      "completion_date": "2025-05-08",
+      "notes": "Implementation complete and unit tests passing after FIX-TEST-CORE-01."
+    },
+    {
+      "id": "MVK-CORE-02",
+      "title": "Core Extension: Implement Basic PyScaffold Extension Structure",
+      "type": "Task",
+      "scope": ["Meta-Evolutionary"],
+      "description": "As a Kernel Developer, I need to set up the basic structure for `khora-core-extension` and register it using PyScaffold entry points, so it can be discovered and invoked by `putup`.",
+      "acceptance_criteria": [
+        "The `khora-core-extension` has the necessary Python package structure (`src/khora_kernel_vnext/extensions/core`).",
+        "An `Extension` subclass (`CoreExtension`) is defined.",
+        "The extension is registered using the `pyscaffold.extensions` entry point in the kernel's `pyproject.toml`.",
+        "Running `putup --khora-core ...` successfully loads and activates the extension (Verified by completion of FIX-INTEG-PUTUP).",
+        "The manifest parsing logic from `MVK-CORE-01` is callable from within the extension's activation hook."
+      ],
+      "dependencies": ["MVK-CORE-01"],
+      "status": "pending_verification",
+      "completion_date": "2025-05-07",
+      "notes": "Implementation exists, awaiting verification via FIX-INTEG-PUTUP."
+    },
+    {
+      "id": "FIX-TEST-CORE-01",
+      "title": "Fix Test: Resolve Failures in test_manifest.py",
+      "type": "Bugfix",
+      "scope": ["Meta-Evolutionary"],
+      "description": "As a Kernel Developer, I need to fix the failing unit tests in `tests/extensions/core/test_manifest.py` identified during MVK development, so that the manifest parsing logic is correctly verified.",
+      "acceptance_criteria": [
+        "`import tomlkit` is added to `test_manifest.py`.",
+        "Assertions in `test_fastapi_true_api_dir_missing` and `test_empty_khora_section` are updated to correctly check Pydantic V2 validation error structures.",
+        "The `test_invalid_field_types_or_values` parameterization for TOML generation is robust.",
+        "All tests in `tests/extensions/core/test_manifest.py` pass."
+      ],
+      "dependencies": [],
+      "status": "completed",
+      "completion_date": "2025-05-08",
+      "next_task_prompt": "Manifest parsing unit tests fixed. Proceed to fix context generation unit tests (FIX-TEST-CORE-03)."
+    },
+    {
+      "id": "MVK-CORE-03",
+      "title": "Core Extension: Generate Minimal AI Context File (.khora/context.yaml)",
+      "type": "Feature",
+      "scope": ["Agentic System", "Meta-Evolutionary"],
+      "description": "As a Kernel Developer, I need the `khora-core-extension` to generate a minimal `.khora/context.yaml` file containing basic project information derived from the manifest, so AI agents have initial context.",
+      "acceptance_criteria": [
+        "A PyScaffold action within `khora-core-extension` generates the context file.",
+        "The action creates the `.khora` directory.",
+        "The generated `.khora/context.yaml` file exists.",
+        "The file contains correct `kernel_version`, `schema_version`, `generated_at`, project info, and `knowledge_graph_summary`: `TBD for MVK`.",
+        "The generated YAML is valid.",
+        "Unit tests *pass* verifying the content generation logic (Verified by completion of FIX-TEST-CORE-03).",
+        "Integration tests verify file creation and basic content (Verified by MVK-TEST-02)."
+      ],
+      "dependencies": ["MVK-CORE-02", "FIX-TEST-CORE-03"],
+      "status": "completed",
+      "completion_date": "2025-05-08",
+      "notes": "Implementation complete and unit tests passing after FIX-TEST-CORE-03. Awaiting integration test verification via MVK-TEST-02."
+    },
+    {
+      "id": "FIX-TEST-CORE-03",
+      "title": "Fix Test: Resolve Assertion Error in core/test_extension.py",
+      "type": "Bugfix",
+      "scope": ["Meta-Evolutionary"],
+      "description": "As a Kernel Developer, I need to fix the failing assertion in `test_generate_with_version_file_read_error` within `tests/extensions/core/test_extension.py`, so that error handling for VERSION file reading is correctly tested.",
+      "acceptance_criteria": [
+        "The mocking strategy for `Path(...).read_text` accurately simulates an OSError during VERSION file read within the `_generate_khora_context_yaml` action.",
+        "The assertion correctly checks that `context_data['kernel_version']` becomes `'UNKNOWN'` when the read fails.",
+        "The test `test_generate_with_version_file_read_error` passes."
+      ],
+      "dependencies": [],
+      "status": "completed",
+      "completion_date": "2025-05-08",
+      "next_task_prompt": "Context generation unit tests fixed. All Core unit tests now pass. Address the critical integration issue (FIX-INTEG-PUTUP)."
+    },
+    {
+      "id": "FIX-TPL-LOAD",
+      "title": "Fix Template: Correct Template Loading Paths/Names",
+      "type": "Bugfix",
+      "scope": ["Meta-Evolutionary", "DevRelSecOps (Target)"],
+      "description": "As a Kernel Developer, I need to correct the template file references in the Docker and CI extensions to use the correct file names expected by `get_template`.",
+      "acceptance_criteria": [
+        "In `docker/extension.py`, the `get_template` call uses `docker_compose_yml`.",
+        "In `ci_github_actions/extension.py`, the `get_template` call uses `ci_workflow_yml`.",
+        "Template files (`docker_compose_yml.template`, `ci_workflow_yml.template`) exist in the correct locations with the `.template` suffix.",
+        "Unit tests in `test_docker_extension.py` and `test_extension.py` (for CI) pass regarding template loading."
+      ],
+      "dependencies": [],
+      "status": "completed",
+      "completion_date": "2025-05-07",
+      "next_task_prompt": "Template loading issues fixed."
+    },
+    {
+      "id": "FIX-INTEG-PUTUP",
+      "title": "Fix Integration: Resolve `putup` Unrecognized Argument Error",
+      "type": "Bugfix",
+      "scope": ["Meta-Evolutionary", "DevRelSecOps (Kernel)"],
+      "description": "As a Kernel Developer, I need to investigate and fix why the `putup` command run via subprocess in integration tests fails to recognize the custom Khora extension flags (e.g., `--khora-core`), so that end-to-end scaffolding tests can run.",
+      "diagnosis": "The `pytest` output shows `cli.py: error: unrecognized arguments: --khora-core ...`. This indicates that the PyScaffold CLI process invoked via `subprocess` in `test_mvk_integration.py` and `test_precommit_integration.py` is not discovering or loading the Khora extensions defined via entry points in the `khora-kernel-vnext` package's `pyproject.toml`. This is likely due to the subprocess environment missing context about the editable installation of `khora-kernel-vnext` or incorrect `PYTHONPATH` setup.",
+      "proposed_fixes": [
+        "**1. Verify Editable Install & Environment:** Ensure the `khora-kernel-vnext` package is installed correctly in editable mode (`pip install -e .[dev]`) *within the exact Python environment being used by pytest*. Add a step in the test setup or CI to explicitly confirm this.",
+        "**2. Refine Subprocess Environment:** Double-check the `env` dictionary passed to `subprocess.run`. Ensure `PYTHONPATH` explicitly includes the path to the `khora-kernel-vnext/src` directory. Verify the inherited `PATH` includes the correct Python executable's directory (`sys.executable`).",
+        "**3. PyScaffold Programmatic API (Recommended):** Replace the `subprocess.run` calls in `test_mvk_integration.py` and `test_precommit_integration.py` with direct calls to `pyscaffold.api.create_project`. This involves passing the necessary options (including project path, name, package, and importantly, a list of instantiated Khora extension objects) directly to the `create_project` function. This completely bypasses CLI argument parsing and subprocess environment issues, making the tests more robust and potentially faster. Test assertions will need to be adapted to check the file system directly after the `create_project` call.",
+        "**4. PyScaffold Debugging:** Add verbose flags (`-vv`) to the `putup` command in the subprocess call (if approach 3 is not taken) to potentially get more insight from PyScaffold's logging about extension loading."
+      ],
+      "acceptance_criteria": [
+        "The root cause of the `unrecognized arguments` error is identified and resolved, preferably by switching integration tests to use `pyscaffold.api.create_project`.",
+        "The method for invoking PyScaffold scaffolding in integration tests ensures Khora extensions are correctly activated *without* manually creating the files the extensions are supposed to generate.",
+        "Running the integration test fixtures `scaffolded_klt_mvk_project` and `test_precommit_config_generated_and_valid` no longer fails due to extension activation issues."
+      ],
+      "dependencies": ["MVK-CORE-02"],
+      "status": "completed",
+      "completion_date": "2025-05-08",
+      "notes": "Integration tests (`test_mvk_integration.py`, `test_precommit_integration.py`) were refactored to use `pyscaffold.api.create_project` directly, bypassing subprocess issues and ensuring extensions are loaded programmatically.",
+      "next_task_prompt": "The critical `putup` integration issue (FIX-INTEG-PUTUP) is resolved by refactoring integration tests. Now, address the failing unit tests in Docker and CI extensions (FIX-TEST-FEAT-01)."
+    },
+    {
+       "id": "FIX-TEST-FEAT-01",
+       "title": "Fix Test: Resolve Unit Test Failures for Docker and CI Extensions",
+       "type": "Bugfix",
+       "scope": ["Meta-Evolutionary"],
+       "description": "As a Kernel Developer, I need to fix the failing unit tests in `tests/extensions/docker/test_extension.py` and `tests/extensions/ci_github_actions/test_extension.py` which are failing because the mocked `khora_config` in `opts` is not being accessed correctly.",
+       "diagnosis": "The tests fail with assertions like `assert '.github' in {'my_ci_test_project': {}}` or `assert 'docker-compose.yml' in {...}`, and logs show warnings like 'Khora config not found in opts'. This happens because the direct action calls in the unit tests use a simple mock object for `khora_config` which doesn't fully replicate the attribute access (e.g., `khora_config.features.docker`) used within the extension code.",
+       "proposed_fixes": [
+         "**1. Use Real Pydantic Model in Mocks:** In the `mock_opts` fixture or within the tests themselves (`test_docker_extension.py`, `test_ci_github_actions/test_extension.py`), instead of creating a generic mock object for `khora_config`, instantiate the actual `KhoraManifestConfig` model (imported from `khora_kernel_vnext.extensions.core.manifest`) with the required test data. This ensures attribute access like `khora_config.features.docker` works as expected.",
+         "**2. Adjust Access Pattern (Less Ideal):** Modify the extension code (e.g., `add_docker_compose_file`) to use dictionary-style access (`khora_config['features']['docker']`) if the plan is to always pass `opts` as a dictionary, but using the Pydantic model is generally cleaner and safer due to validation."
+       ],
+       "acceptance_criteria": [
+         "The mocking/setup in the unit tests for the Docker and CI extensions correctly provides the `khora_config` object in a way that the extension code can access its attributes (e.g., `khora_config.features.docker`).",
+         "The `WARNING: Khora config not found in opts` messages no longer appear during these specific unit test runs.",
+         "All tests in `tests/extensions/docker/test_extension.py` pass.",
+         "All tests in `tests/extensions/ci_github_actions/test_extension.py` pass."
+       ],
+       "dependencies": ["MVK-FEAT-02", "MVK-FEAT-03"],
+       "status": "todo",
+       "next_task_prompt": "Unit tests for Docker and CI extensions fixed. Now that all unit tests and integration setup are fixed, MVK-TEST-02 (Verify Integration Tests) can be run to fully validate MVK features."
+    },
+    {
+      "id": "MVK-FEAT-01",
+      "title": "FastAPI Extension: Implement Minimal FastAPI Scaffolding",
+      "type": "Feature",
+      "scope": ["Code System (Target)", "DevRelSecOps (Target)"],
+      "description": "As a Kernel Developer, I need a `khora-fastapi-scaffold-extension` that generates a basic FastAPI application structure when requested in the manifest.",
+      "acceptance_criteria": [
+        "A new PyScaffold extension `khora-fastapi-scaffold-extension` is created and registered.",
+        "The extension activates only if `[tool.khora.features].fastapi` is `true`.",
+        "The extension creates the directory specified by `[tool.khora.paths].api_dir`.",
+        "It generates `main.py`, `requirements.txt`, and `Dockerfile` inside the `api_dir`.",
+        "Integration tests (part of MVK-TEST-02) verify the conditional creation and content."
+      ],
+      "dependencies": ["MVK-CORE-02", "FIX-INTEG-PUTUP"],
+      "status": "pending_verification",
+      "completion_date": "2025-05-07",
+      "notes": "Implementation exists, awaiting passing integration tests (MVK-TEST-02)."
+    },
+    {
+      "id": "MVK-FEAT-02",
+      "title": "Docker Extension: Implement Minimal Docker Compose Generation",
+      "type": "Feature",
+      "scope": ["DevRelSecOps (Target)"],
+      "description": "As a Kernel Developer, I need a `khora-docker-extension` that generates a minimal `docker-compose.yml` file containing the basic API service.",
+      "acceptance_criteria": [
+        "A new PyScaffold extension `khora-docker-extension` is created and registered.",
+        "The extension activates only if `[tool.khora.features].docker` is `true`.",
+        "It generates a `docker-compose.yml` file.",
+        "The `docker-compose.yml` defines a single API service based on manifest config.",
+        "Unit tests pass (Verified by completion of FIX-TEST-FEAT-01).",
+        "Integration tests (part of MVK-TEST-02) verify the creation and basic structure."
+      ],
+      "dependencies": ["MVK-CORE-02", "MVK-FEAT-01", "FIX-TPL-LOAD", "FIX-INTEG-PUTUP", "FIX-TEST-FEAT-01"],
+      "status": "pending_test_fix",
+      "completion_date": "2025-05-07",
+      "notes": "Implementation exists, template loading fixed, unit tests need fix (FIX-TEST-FEAT-01), awaiting passing integration tests (MVK-TEST-02)."
+   },
+    {
+      "id": "MVK-FEAT-03",
+      "title": "CI Extension: Implement Minimal CI Workflow Generation (GitHub Actions)",
+      "type": "Feature",
+      "scope": ["DevRelSecOps (Target)"],
+      "description": "As a Kernel Developer, I need a `khora-ci-github-actions-extension` to generate a basic GitHub Actions CI workflow file.",
+      "acceptance_criteria": [
+        "A new PyScaffold extension `khora-ci-github-actions-extension` is created and registered.",
+        "The extension activates only if `[tool.khora.features].ci_github_actions` is `true`.",
+        "It generates `.github/workflows/ci.yml`.",
+        "The workflow includes correct steps for checkout, python setup, dependency install, lint, format check, test.",
+        "Unit tests pass (Verified by completion of FIX-TEST-FEAT-01).",
+        "Integration tests (part of MVK-TEST-02) verify the creation and key steps."
+      ],
+      "dependencies": ["MVK-CORE-02", "FIX-TPL-LOAD", "FIX-INTEG-PUTUP", "FIX-TEST-FEAT-01"],
+      "status": "pending_test_fix",
+      "completion_date": "2025-05-07",
+      "notes": "Implementation exists, template loading fixed, unit tests need fix (FIX-TEST-FEAT-01), awaiting passing integration tests (MVK-TEST-02)."
+    },
+    {
+      "id": "MVK-FEAT-04",
+      "title": "Pre-commit: Ensure Basic Pre-commit Integration",
+      "type": "Task",
+      "scope": ["DevRelSecOps (Target)"],
+      "description": "As a Kernel Developer, I need to ensure that the MVK bootstrap process correctly sets up a basic `.pre-commit-config.yaml` using PyScaffold's capabilities.",
+      "acceptance_criteria": [
+        "Running `putup` with Khora MVK extensions results in a `.pre-commit-config.yaml` file.",
+        "The file includes hooks for standard checks and formatters/linters.",
+        "Running `pre-commit run --all-files` on the newly generated project passes (or exits with 1).",
+        "The integration test `test_precommit_integration.py` passes (Verified by completion of MVK-TEST-02)."
+      ],
+      "dependencies": ["MVK-CORE-02", "FIX-INTEG-PUTUP"],
+      "status": "pending_verification",
+      "completion_date": "2025-05-07",
+      "notes": "Awaiting passing integration tests (MVK-TEST-02) for verification."
+    },
+    {
+      "id": "MVK-TEST-01",
+      "title": "Testing: Verify Unit Tests for Core Extension",
+      "type": "Task",
+      "scope": ["Meta-Evolutionary"],
+      "description": "As a Kernel Developer, I need to ensure all unit tests for the manifest parsing and context generation logic in `khora-core-extension` pass after fixes.",
+      "acceptance_criteria": [
+        "All tests in `tests/extensions/core/test_manifest.py` pass.",
+        "All tests in `tests/extensions/core/test_extension.py` pass.",
+        "Tests run successfully in the kernel's CI pipeline."
+      ],
+      "dependencies": ["FIX-TEST-CORE-01", "FIX-TEST-CORE-03"],
+      "status": "completed",
+      "completion_date": "2025-05-08",
+      "next_task_prompt": "All Core Extension unit tests pass. Next priority is FIX-INTEG-PUTUP."
+    },
+    {
+      "id": "MVK-TEST-02",
+      "title": "Testing: Verify Integration Tests for MVK Extensions",
+      "type": "Task",
+      "scope": ["Meta-Evolutionary"],
+      "description": "As a Kernel Developer, I need integration tests that run the Khora MVK extensions via `putup` (or `pyscaffold.api.create_project`) against a fixture project to verify the end-to-end scaffolding process for v0.1 passes.",
+      "acceptance_criteria": [
+        "The integration tests invoke PyScaffold with Khora MVK extensions enabled.",
+        "Integration tests assert the existence and key content of all MVK output artifacts (listed in Phase 1.4).",
+        "Tests run successfully in the kernel's CI pipeline.",
+        "`test_mvk_integration.py` passes.",
+        "`test_precommit_integration.py` passes."
+      ],
+      "dependencies": [
+        "MVK-FEAT-01",
+        "MVK-FEAT-02",
+        "MVK-FEAT-03",
+        "MVK-FEAT-04",
+        "MVK-CORE-03",
+        "FIX-INTEG-PUTUP",
+        "FIX-TPL-LOAD",
+        "MVK-TEST-01",
+        "FIX-TEST-FEAT-01" # Add dependency on the new test fix ticket
+      ],
+      "status": "pending",
+      "notes": "Depends on all feature implementations being verifiable, the integration setup fix (FIX-INTEG-PUTUP), and the feature unit test fix (FIX-TEST-FEAT-01)."
+    }
+  ]
+}

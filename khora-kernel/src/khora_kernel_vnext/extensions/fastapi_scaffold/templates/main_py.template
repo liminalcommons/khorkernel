@@ -1,0 +1,25 @@
+from fastapi import FastAPI
+
+app = FastAPI(
+    title="{{ opts.project_path.name }} API",
+    version="{{ opts.version }}",
+    description="{{ opts.description }}"
+)
+
+@app.get(
+    "/healthz",
+    tags=["Health"],
+    summary="Perform a Health Check",
+    response_description="Return HTTP Status Code 200 (OK)",
+    status_code=200,
+)
+async def healthz():
+    """
+    ## Perform a Health Check
+    Endpoint to confirm that the API is up and running.
+    """
+    return {"status": "OK"}
+
+# To run the app (for development):
+# uvicorn main:app --reload --host 0.0.0.0 --port 8000
+# (Assuming this file is in the api_dir, and you cd into api_dir first)

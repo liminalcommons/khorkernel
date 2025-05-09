@@ -1,0 +1,12 @@
+"""
+Playwright configuration for ${project_name}
+"""
+from pathlib import Path
+
+def pytest_configure(config):
+    # Add custom pytest configuration here
+    pass
+
+def pytest_bdd_apply_tag(tag, function):
+    # Handle pytest-bdd tags (if using BDD style tests)
+    return None

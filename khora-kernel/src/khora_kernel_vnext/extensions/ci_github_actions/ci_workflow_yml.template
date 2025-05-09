@@ -1,0 +1,44 @@
+name: CI Workflow for ${project_name}
+
+on:
+  push:
+    branches: [ main, master, develop ]
+  pull_request:
+    branches: [ main, master, develop ]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python-version: ["${python_version}"] # Use the version from the manifest
+
+    steps:
+    - uses: actions/checkout@v3
+      with:
+        fetch-depth: 0  # Fetch all history for TruffleHog
+
+    - name: Set up Python ${matrix_python_version}
+      uses: actions/setup-python@v3
+      with:
+        python-version: ${matrix_python_version}
+
+    - name: Install uv
+      run: |
+        curl -LsSf https://astral.sh/uv/install.sh | sh
+        echo "${HOME_PATH}/.cargo/bin" >> ${GITHUB_PATH} # Add uv to PATH
+
+    - name: Install dependencies
+      run: |
+        uv pip install --system .[dev] # Assumes a [project.optional-dependencies] dev group
+
+    ${security_gates_step}
+
+    - name: Lint with Ruff
+      run: |
+        uv ruff check .
+        uv ruff format --check .
+
+    - name: Run tests with Pytest
+      run: |
+        uv pytest

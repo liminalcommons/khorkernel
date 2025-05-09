@@ -1,0 +1,35 @@
+version: '3.8'
+
+services:
+  ${api_service_name}:
+    build:
+      context: ./${api_dir}
+      dockerfile: Dockerfile
+    ports:
+      - "${http_port}:${http_port}"
+    volumes:
+      - ./${api_dir}:/app/${api_dir}
+    # Add database and broker environment variables conditionally
+    ${api_env_vars}
+    # Add dependencies conditionally
+    ${api_depends_on}
+    # Ensure the command is appropriate for your FastAPI app, e.g., using uvicorn
+    # The command might need to be adjusted based on how the Dockerfile in api_dir is set up.
+    # Example: command: ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", str(http_port), "--reload"]
+    # This template assumes the Dockerfile in api_dir handles the CMD or ENTRYPOINT.
+
+  # Database service (optional)
+  ${postgres_service}
+  
+  # Broker service (optional)
+  ${redis_service}
+  
+  # Observability services (optional)
+  ${otel_collector_service}
+  
+  ${prometheus_service}
+  
+  ${grafana_service}
+
+# Volumes (optional)
+${volumes}

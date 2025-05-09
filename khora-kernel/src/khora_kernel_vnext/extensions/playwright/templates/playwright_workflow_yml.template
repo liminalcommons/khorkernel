@@ -1,0 +1,56 @@
+name: Playwright UI Tests for ${project_name}
+
+on:
+  push:
+    branches: [ main, master, develop ]
+    paths:
+      - 'tests/ui/**'
+  pull_request:
+    branches: [ main, master, develop ]
+    paths:
+      - 'tests/ui/**'
+  # Allow manual triggering
+  workflow_dispatch:
+
+jobs:
+  playwright-tests:
+    name: Playwright UI Tests
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python-version: ["${python_version}"] # Use the version from the manifest
+    
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v3
+
+    - name: Set up Python ${matrix_python_version}
+      uses: actions/setup-python@v3
+      with:
+        python-version: ${matrix_python_version}
+
+    - name: Install uv
+      run: |
+        curl -LsSf https://astral.sh/uv/install.sh | sh
+        echo "${HOME_PATH}/.cargo/bin" >> ${GITHUB_PATH} # Add uv to PATH
+
+    - name: Install dependencies
+      run: |
+        uv pip install -r tests/ui/requirements.txt --system
+
+    - name: Install Playwright browsers
+      run: |
+        playwright install --with-deps chromium
+
+    - name: Run Playwright tests
+      run: |
+        cd tests/ui
+        python -m pytest --junit-xml=test-results/junit.xml --html=test-results/report.html
+
+    - name: Upload test results
+      if: always()
+      uses: actions/upload-artifact@v3
+      with:
+        name: playwright-test-results
+        path: tests/ui/test-results/
+        retention-days: 7

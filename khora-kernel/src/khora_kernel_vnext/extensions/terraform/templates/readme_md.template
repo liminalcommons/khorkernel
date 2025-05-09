@@ -1,0 +1,72 @@
+# ${project_name} Infrastructure
+
+This directory contains the Terraform infrastructure as code (IaC) for the ${project_name} project.
+
+## Directory Structure
+
+- `/infra/terraform/`: Root directory with common configuration
+- `/infra/terraform/modules/`: Reusable Terraform modules
+- `/infra/terraform/environments/`: Environment-specific configurations
+  - `/infra/terraform/environments/dev/`: Development environment
+  - `/infra/terraform/environments/prod/`: Production environment
+
+## Prerequisites
+
+- [Terraform](https://www.terraform.io/downloads.html) >= 1.0.0
+- Access credentials for your cloud provider(s)
+- Appropriate permissions to create resources
+
+## Getting Started
+
+1. Navigate to the environment you want to deploy:
+
+```bash
+cd environments/dev
+```
+
+2. Initialize Terraform:
+
+```bash
+terraform init
+```
+
+3. Review the planned changes:
+
+```bash
+terraform plan
+```
+
+4. Apply the changes:
+
+```bash
+terraform apply
+```
+
+## Modules
+
+- Create reusable modules in the `modules/` directory
+- Example module structure:
+  - `modules/networking/`: Network infrastructure module
+  - `modules/compute/`: Compute resources module
+  - `modules/database/`: Database resources module
+
+## Environment-Specific Configurations
+
+Each environment directory contains:
+- `main.tf`: Main configuration file for the environment
+- `terraform.tfvars`: Environment-specific variable values
+
+## Best Practices
+
+1. Use remote state storage for team collaboration
+2. Implement state locking to prevent concurrent modifications
+3. Use consistent naming conventions
+4. Tag all resources for better organization and cost tracking
+5. Use workspaces for multi-environment management
+6. Protect sensitive information using variables and encrypted files
+7. Use pre-commit hooks to validate Terraform code before commit
+
+## Additional Resources
+
+- [Terraform Documentation](https://www.terraform.io/docs/index.html)
+- [Terraform Best Practices](https://www.terraform-best-practices.com/)

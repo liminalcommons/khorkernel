@@ -1,0 +1,65 @@
+"""
+Pytest fixtures for Playwright UI testing
+"""
+import os
+import pytest
+from pathlib import Path
+from typing import Dict, Generator, Any
+
+from playwright.sync_api import Browser, BrowserContext, Page, sync_playwright, Playwright
+
+
+@pytest.fixture(scope="session")
+def browser_type_launch_args() -> Dict[str, Any]:
+    """Return arguments to use when launching browser instance."""
+    return {
+        "headless": os.environ.get("HEADLESS", "true").lower() == "true",
+        "slow_mo": int(os.environ.get("SLOW_MO", "0")),
+    }
+
+
+@pytest.fixture(scope="session")
+def browser_context_args() -> Dict[str, Any]:
+    """Return arguments to use for creating browser context."""
+    return {
+        "viewport": {
+            "width": 1280,
+            "height": 720,
+        },
+        "record_video_dir": None,  # Set to a path to record videos
+        "user_agent": "Playwright UI Tests",
+    }
+
+
+@pytest.fixture(scope="session")
+def playwright() -> Generator[Playwright, None, None]:
+    """Fixture for creating a Playwright instance."""
+    with sync_playwright() as playwright:
+        yield playwright
+
+
+@pytest.fixture(scope="session")
+def browser(
+    playwright: Playwright, browser_type_launch_args: Dict
+) -> Generator[Browser, None, None]:
+    """Fixture for creating a browser instance."""
+    browser = playwright.chromium.launch(**browser_type_launch_args)
+    yield browser
+    browser.close()
+
+
+@pytest.fixture
+def context(
+    browser: Browser, browser_context_args: Dict
+) -> Generator[BrowserContext, None, None]:
+    """Fixture for creating a browser context."""
+    context = browser.new_context(**browser_context_args)
+    yield context
+    context.close()
+
+
+@pytest.fixture
+def page(context: BrowserContext) -> Generator[Page, None, None]:
+    """Fixture for creating a page instance."""
+    page = context.new_page()
+    yield page

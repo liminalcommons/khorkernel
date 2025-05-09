@@ -1,1 +1,0 @@
-# Khora Kernel test package

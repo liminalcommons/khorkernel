@@ -1,0 +1,46 @@
+# Terraform outputs for the infrastructure
+
+# Example outputs (customize based on your resources)
+output "project_info" {
+  description = "Project information"
+  value = {
+    project_name = var.project_name
+    environment  = var.environment
+    region       = var.region
+  }
+}
+
+# Example network outputs
+/*
+output "vpc_id" {
+  description = "ID of the VPC"
+  value       = module.networking.vpc_id
+}
+
+output "subnet_ids" {
+  description = "IDs of the created subnets"
+  value       = module.networking.subnet_ids
+}
+*/
+
+# Example compute outputs
+/*
+output "instance_ids" {
+  description = "IDs of the created instances"
+  value       = module.compute.instance_ids
+}
+
+output "public_ips" {
+  description = "Public IPs of the created instances"
+  value       = module.compute.public_ips
+}
+*/
+
+# Example database outputs
+/*
+output "database_endpoint" {
+  description = "Database connection endpoint"
+  value       = module.database.endpoint
+  sensitive   = true  # Mark as sensitive to hide in console output
+}
+*/

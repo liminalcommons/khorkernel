@@ -1,0 +1,91 @@
+[project]
+name = "khora-kernel"
+version = "0.1.0"
+description = "Khora Kernel - Meta-Evolutionary Development Framework"
+readme = "README.md"
+requires-python = ">=3.12"
+dependencies = [
+    "pyyaml",
+    "jinja2",
+    "typer",
+    "pyscaffold",
+    "pydantic",
+    "click",
+    "tomlkit"
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest",
+    "hatchling", # Ensure build backend is available for editable installs/uv run
+    "ruff", # For linting, good to have in dev
+    "black", # For formatting, good to have in dev
+    "mypy", # For type checking
+    "pre-commit", # For pre-commit hooks
+    "PyYAML", # For YAML parsing in tests
+    "tomlkit", # For TOML parsing/writing in tests, also a pyscaffold dep
+    # Add other test/dev specific dependencies if any
+]
+
+[tool.ruff]
+line-length = 88
+select = ["E", "F", "W", "I", "B", "C4", "UP", "SIM", "T20", "PYI", "PT", "Q", "RUF"]
+ignore = ["E501", "B008", "C901", "UP007", "UP035"]
+
+[tool.black]
+line-length = 88
+target-version = ['py312']
+include = '\.pyi?$'
+exclude = '''
+/(
+    \.git
+  | \.hg
+  | \.mypy_cache
+  | \.tox
+  | \.venv
+  | _build
+  | buck-out
+  | build
+  | dist
+)/
+'''
+
+[tool.mypy]
+python_version = "3.12"
+warn_return_any = true
+warn_unused_configs = true
+disallow_untyped_defs = true
+disallow_incomplete_defs = true
+check_untyped_defs = true
+disallow_untyped_decorators = true
+no_implicit_optional = true
+warn_redundant_casts = true
+warn_unused_ignores = true
+warn_no_return = true
+warn_unreachable = true
+strict_equality = true
+
+[project.entry-points."pyscaffold.extensions"]
+khora_core = "khora_kernel.extensions.core.extension:CoreExtension"
+fastapi_scaffold = "khora_kernel.extensions.fastapi_scaffold.extension:FastApiScaffoldExtension"
+khora_docker = "khora_kernel.extensions.docker.extension:DockerExtension"
+khora_ci_github_actions = "khora_kernel.extensions.ci_github_actions.extension:CIGitHubActionsExtension"
+khora_kg = "khora_kernel.extensions.kg.extension:KGExtension"
+khora_precommit = "khora_kernel.extensions.precommit.extension:PrecommitExtension"
+
+[project.scripts]
+khora = "khora_kernel.cli.commands:main_cli"
+
+[tool.pytest.ini_options]
+python_files = "test_*.py"
+python_functions = "test_*"
+python_classes = "Test*"
+addopts = "-ra -q"
+testpaths = ["tests"]
+
+[build-system]
+requires = ["hatchling>=1.22.0"] # Specify a reasonably recent version
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/khora_kernel"]

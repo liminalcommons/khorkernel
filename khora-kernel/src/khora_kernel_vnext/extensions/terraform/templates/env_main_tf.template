@@ -1,0 +1,54 @@
+# Environment-specific Terraform configuration for ${project_name} in ${env_name} environment
+
+# Use the root module
+module "main" {
+  source = "../../"
+  
+  # Pass environment-specific variables
+  project_name = $$var.project_name
+  environment  = "${env_name}"
+  region       = $$var.region
+  
+  # Add other variables as needed
+  instance_type = $$var.instance_type
+  vpc_cidr      = $$var.vpc_cidr
+  subnet_cidrs  = $$var.subnet_cidrs
+}
+
+# Environment-specific variables
+variable "project_name" {
+  description = "Name of the project"
+  type        = string
+}
+
+variable "region" {
+  description = "Cloud provider region"
+  type        = string
+}
+
+variable "instance_type" {
+  description = "Type of compute instance"
+  type        = string
+}
+
+variable "vpc_cidr" {
+  description = "CIDR block for the VPC"
+  type        = string
+}
+
+variable "subnet_cidrs" {
+  description = "CIDR blocks for the subnets"
+  type        = list(string)
+}
+
+# Output the results from the root module
+output "project_info" {
+  description = "Project information"
+  value       = $$module.main.project_info
+}
+
+# Example: Other outputs
+# output "network_info" {
+#   description = "Network information"
+#   value       = $$module.main.network_info
+# }

@@ -1,0 +1,31 @@
+{#- Use a recent Python version. Users can change this. #}
+{% set python_version = opts.khora_config.get("python_version", "3.11") %}
+FROM python:{{ python_version }}-slim
+
+{#- Default port if not specified in khora config #}
+{% set http_port = opts.khora_config.get("ports", {}).get("http", 8000) %}
+
+LABEL maintainer="{{ opts.author }} <{{ opts.email }}>"
+LABEL version="{{ opts.version }}"
+LABEL description="{{ opts.description }}"
+
+WORKDIR /app
+
+# Copy only requirements first to leverage Docker cache
+COPY {{ opts.api_dir_name }}/requirements.txt /app/requirements.txt
+
+# Install dependencies using uv if available, otherwise pip
+# This assumes uv might be part of the base image or installed separately.
+# For simplicity, sticking to pip for now.
+RUN pip install --no-cache-dir --upgrade -r /app/requirements.txt
+
+# Copy the rest of the application code from the API directory
+COPY {{ opts.api_dir_name }}/ /app/
+
+EXPOSE {{ http_port }}
+
+# Command to run the application
+# The service name '{{ opts.docker_api_service_name }}' isn't directly used in the CMD
+# but was passed as an opt. It's more relevant for docker-compose.
+# Assuming main.py is at the root of the api_dir which is now /app in the container.
+CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "{{ http_port }}"]

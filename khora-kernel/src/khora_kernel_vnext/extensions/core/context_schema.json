@@ -1,0 +1,168 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Khora Context Schema",
+  "description": "Schema for the Khora context.yaml file that provides context about the project to AI agents and tools",
+  "type": "object",
+  "required": [
+    "kernel_version",
+    "schema_version",
+    "generated_at",
+    "project"
+  ],
+  "properties": {
+    "kernel_version": {
+      "type": "string",
+      "description": "Version of the Khora Kernel that generated this context file"
+    },
+    "schema_version": {
+      "type": "string",
+      "description": "Version of the context.yaml schema"
+    },
+    "generated_at": {
+      "type": "string",
+      "format": "date-time",
+      "description": "ISO-8601 timestamp when the context file was generated"
+    },
+    "project": {
+      "type": "object",
+      "required": ["name", "description", "paths"],
+      "properties": {
+        "name": {
+          "type": "string",
+          "description": "Name of the project"
+        },
+        "description": {
+          "type": "string",
+          "description": "Description of the project"
+        },
+        "paths": {
+          "type": "object",
+          "description": "Custom paths defined in the project's Khora manifest",
+          "additionalProperties": {
+            "type": "string",
+            "description": "Path relative to project root"
+          }
+        }
+      }
+    },
+    "knowledge_graph_summary": {
+      "oneOf": [
+        {
+          "type": "string",
+          "description": "Message when KG is not available or could not be processed"
+        },
+        {
+          "type": "object",
+          "properties": {
+            "concepts_hash": {
+              "type": ["string", "null"],
+              "description": "SHA-1 hash of the concepts data"
+            },
+            "rules_hash": {
+              "type": ["string", "null"],
+              "description": "SHA-1 hash of the rules data"
+            },
+            "relationships_hash": {
+              "type": ["string", "null"],
+              "description": "SHA-1 hash of the relationships data"
+            },
+            "concept_count": {
+              "type": "integer",
+              "minimum": 0,
+              "description": "Number of concepts in the KG"
+            },
+            "rule_count": {
+              "type": "integer",
+              "minimum": 0,
+              "description": "Number of rules in the KG"
+            },
+            "relationship_count": {
+              "type": "integer",
+              "minimum": 0,
+              "description": "Number of relationships in the KG"
+            },
+            "relationship_types": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              },
+              "description": "Types of relationships defined in the KG"
+            },
+            "source_dir": {
+              "type": "string",
+              "description": "Directory containing the KG source files"
+            },
+            "last_updated": {
+              "type": ["string", "null"],
+              "format": "date-time",
+              "description": "When the KG was last updated"
+            }
+          }
+        }
+      ]
+    },
+    "components": {
+      "type": "object",
+      "description": "Information about components scaffolded by extensions",
+      "properties": {
+        "fastapi": {
+          "type": "object",
+          "description": "FastAPI component information",
+          "properties": {
+            "type": {
+              "type": "string",
+              "enum": ["fastapi"],
+              "description": "Type of the component"
+            },
+            "api_info": {
+              "type": "object",
+              "properties": {
+                "endpoints_count": {
+                  "type": "integer",
+                  "minimum": 0,
+                  "description": "Number of API endpoints"
+                },
+                "endpoints": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "path": {
+                        "type": "string",
+                        "description": "URL path of the endpoint"
+                      },
+                      "method": {
+                        "type": "string",
+                        "description": "HTTP method (get, post, put, delete, etc.)"
+                      },
+                      "name": {
+                        "type": "string",
+                        "description": "Name of the function implementing the endpoint"
+                      },
+                      "tags": {
+                        "type": "array",
+                        "items": {
+                          "type": "string"
+                        },
+                        "description": "Tags associated with the endpoint"
+                      },
+                      "summary": {
+                        "type": ["string", "null"],
+                        "description": "Short summary of the endpoint"
+                      },
+                      "description": {
+                        "type": ["string", "null"],
+                        "description": "Detailed description of the endpoint from docstring"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "additionalProperties": true
+    }
+  }
+}

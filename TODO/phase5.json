@@ -1,0 +1,229 @@
+{
+    "description": "Phase 5 (v0.5) Development Tickets for Khora Kernel - AI Empowerment & Core Refinement",
+    "tickets": [
+      {
+        "id": "P5-REN-01",
+        "title": "Project Rename: Transition from khora-kernel-vnext to khora-kernel",
+        "type": "Task",
+        "scope": ["Meta-Evolutionary", "DevRelSecOps (Kernel)"],
+        "description": "As a Kernel Developer, I need to rename the project, repository, and all internal references from `khora-kernel-vnext` to `khora-kernel` to reflect its maturity and prepare for a more stable release line. This involves updating package names, import paths, documentation, CI/CD configurations, and any other place where `khora-kernel-vnext` is used.",
+        "acceptance_criteria": [
+          "The Git repository is renamed (if applicable, or a new one is used and history migrated).",
+          "The root directory in the repository is renamed to `khora-kernel`.",
+          "The Python package name in `pyproject.toml` (`[project].name`) is updated to `khora-kernel`.",
+          "All internal import paths (e.g., `from khora_kernel_vnext.sdk` becomes `from khora_kernel.sdk`) are updated throughout the codebase (`src/`, `tests/`, `examples/`).",
+          "Entry point definitions in `pyproject.toml` are updated to reflect the new package name (e.g., `khora_kernel.extensions.core.extension:CoreExtension`).",
+          "The main CLI script registered in `pyproject.toml` (`[project.scripts]`) might need its module path updated if `main.py` or `cli/commands.py` moves relative to the new package root.",
+          "All references in documentation (`README.md`, `docs/`, `context/`) are updated.",
+          "CI/CD workflow files (`kernel-ci.yml`) are updated for paths and package names.",
+          "The `uv.lock` file is regenerated after package name changes and dependency path updates.",
+          "All unit and integration tests pass after the renaming.",
+          "The `khorkernel.code-workspace` file's path entry is updated to `.` if it previously specified `khora-kernel-vnext` or if the root folder name changes."
+        ],
+        "dependencies": [],
+        "status": "todo",
+        "notes": "This is a foundational task for Phase 5 and should be done early. Careful attention to find-and-replace, import path updates, and testing is crucial."
+      },
+      {
+        "id": "P5-CONF-01",
+        "title": "Implement Manifest Layering: Environment-Specific Overrides",
+        "type": "Feature",
+        "scope": ["Meta-Evolutionary", "DevRelSecOps (Target)"],
+        "description": "Based on P4-CONF-01, implement the first stage of manifest layering by allowing environment-specific overrides within `pyproject.toml`. An AI agent should be able to define or request configurations that vary between 'dev', 'test', and 'prod' environments for a target project.",
+        "acceptance_criteria": [
+          "The `KhoraManifestConfig` model (and its sub-models in `core/manifest.py`) is updated to parse and store configurations from sections like `[tool.khora.env.dev]`, `[tool.khora.env.prod]`.",
+          "A mechanism is implemented (e.g., a CLI option `--khora-env <env_name>` for `khora create` or a field in an agent's request) to specify the active environment during scaffolding.",
+          "The manifest parsing logic in `core/extension.py` correctly merges the base `[tool.khora]` configuration with the specified environment's overrides. Override logic should be deep-merge for dictionaries, with environment-specific values taking precedence.",
+          "Generated files (e.g., `docker-compose.yml`, CI workflows, API configurations) reflect the merged, environment-specific configuration when an environment is specified.",
+          "If no environment is specified, or if an environment section is missing, the base configuration is used without error.",
+          "The `context.yaml` file should ideally reflect which environment's configuration was active during generation, or clearly indicate the layered configuration approach.",
+          "Unit tests verify the merging logic for various override scenarios (e.g., overriding feature flags, paths, plugin_configs).",
+          "Integration tests demonstrate scaffolding a project with environment-specific variations."
+        ],
+        "dependencies": ["P4-CONF-01", "P5-REN-01"],
+        "status": "done",
+        "notes": "Implemented deep merging of environment-specific configurations with base config. Added CLI option for `--khora-env` flag. Created unit and integration tests to verify functionality. Generated context.yaml now includes environment info."
+      },
+      {
+        "id": "P5-AI-DOC-01",
+        "title": "Create AI-Centric User Guide & Getting Started",
+        "type": "Documentation",
+        "scope": ["Agentic System", "Meta-Evolutionary"],
+        "description": "Develop user documentation (User Guide, Getting Started) specifically tailored for an AI agent as the primary consumer. This documentation should explain how an AI can leverage Khora's CLI and understand its outputs (`context.yaml`, validation results) to assist a human developer.",
+        "acceptance_criteria": [
+          "A new `docs/ai_guide/getting_started.md` is created.",
+          "Content focuses on: How an AI can invoke `khora` CLI commands (create, health, inspect, list-plugins, bump-version).",
+          "Explains the structure and significance of `pyproject.toml [tool.khora]` for AI-driven configuration.",
+          "Details the `context.yaml` schema and how an AI can parse it to understand project structure, features, and KG summaries.",
+          "Provides examples of how an AI could interpret `khora health --json-output` or `khora inspect --json-output` (assuming JSON output for AI consumption - see P5-VALID-01).",
+          "Outlines how an AI can guide a human user in creating or modifying a Khora manifest.",
+          "Includes a section on how AI can use Khora to propose project scaffolding steps to a human user.",
+          "The language is clear, precise, and geared towards machine interpretation where possible (e.g., using consistent terminology from `context_schema.json`)."
+        ],
+        "dependencies": ["P5-REN-01"],
+        "status": "done",
+        "notes": "Created comprehensive AI guide directory with getting_started.md and environment_layering.md documents. Included examples of CLI usage, manifest configuration, and AI assistant workflows."
+      },
+      {
+        "id": "P5-AI-CTX-01",
+        "title": "Refine `context.yaml` and Schema for Optimal AI Consumption",
+        "type": "Refactor",
+        "scope": ["Agentic System", "Meta-Evolutionary"],
+        "description": "Review and refine `context.yaml` (and its `core/context_schema.json`) based on P4-AI-01 learnings and the goal of AI agents being primary consumers. Ensure maximum clarity, utility, and ease of parsing for AI agents.",
+        "acceptance_criteria": [
+          "The `core/context_schema.json` is reviewed for clarity, completeness, and consistency. Descriptions are precise.",
+          "Consider adding a 'purpose' or 'how_to_use' field for key sections in `context.yaml` descriptions within the schema, aimed at AI agents.",
+          "Ensure all component details contributed by extensions (e.g., FastAPI endpoints from P4-AI-01) are optimally structured for AI understanding (e.g., clear paths, methods, input/output schema hints if possible).",
+          "Verify that KG summary (concepts, rules, relationships, hashes, counts) is structured effectively.",
+          "If manifest layering (P5-CONF-01) is implemented, `context.yaml` reflects the active environment or the layered setup clearly.",
+          "Update `core/extension.py` context generation logic to align with any schema changes.",
+          "Unit tests for context generation are updated."
+        ],
+        "dependencies": ["P4-AI-01", "P5-REN-01", "P5-CONF-01"],
+        "status": "in_progress",
+        "notes": "Partially implemented: Added environment information to context.yaml as part of P5-CONF-01. The context.yaml now reflects which environment was active during generation in a dedicated environment section."
+      },
+      {
+        "id": "P5-ROBUST-01",
+        "title": "Implement Core Robustness Findings",
+        "type": "Task",
+        "scope": ["Meta-Evolutionary", "DevRelSecOps (Kernel)"],
+        "description": "Implement key recommendations from the P4-ROBUST-01 research (`docs/research/cross_platform_compatibility.md`) focusing on Khora-specific error types and improved logging for better AI diagnosability.",
+        "acceptance_criteria": [
+          "A set of Khora-specific exception classes (e.g., `KhoraManifestError`, `KhoraExtensionError`, `KhoraCliError`) are defined in `sdk/errors.py` or a similar central location.",
+          "Relevant parts of the codebase (CLI commands, extension activation, manifest parsing) are refactored to raise these specific errors instead of generic Python exceptions where appropriate.",
+          "Error messages are made more informative and, where possible, include suggestions or references that an AI agent could parse.",
+          "Logging (using the `logging` module) is reviewed and enhanced across extensions and CLI for clarity, consistency, and appropriate log levels (DEBUG, INFO, WARNING, ERROR).",
+          "Sensitive information is not inadvertently logged.",
+          "Unit tests are added/updated to verify specific error types are raised and logged messages are appropriate."
+        ],
+        "dependencies": ["P4-ROBUST-01", "P5-REN-01"],
+        "status": "todo"
+      },
+      {
+        "id": "P5-VALID-01",
+        "title": "AI-Consumable Manifest Validation & CLI Output",
+        "type": "Feature",
+        "scope": ["Agentic System", "DevRelSecOps (Kernel)"],
+        "description": "Enhance manifest validation and CLI command outputs to be easily parsable by AI agents, typically via JSON output.",
+        "acceptance_criteria": [
+          "A new CLI command `khora validate-manifest [--pyproject-path <path>] [--json-output]` is implemented.",
+          "This command validates the `[tool.khora]` section using `KhoraManifestConfig` from `core/manifest.py`.",
+          "If `--json-output` is used, validation errors (and success messages) are provided in a structured JSON format (e.g., `{\"valid\": false, \"errors\": [{\"loc\": [\"field\"], \"msg\": \"...\", \"type\": \"...\"}]}`).",
+          "Existing CLI commands like `khora health` and `khora inspect` are enhanced to support a `--json-output` flag, providing their reports in a structured JSON format consumable by AI.",
+          "The JSON schema for these outputs should be documented (perhaps as part of the AI-centric user guide P5-AI-DOC-01).",
+          "Unit tests verify the JSON output structure and content for various scenarios (valid manifest, invalid manifest, health check results, inspect results)."
+        ],
+        "dependencies": ["core/manifest.py", "cli/commands.py", "P5-REN-01"],
+        "status": "done",
+        "notes": "Implemented validate-manifest command with JSON output support and environment specification. Added tests in test_validate_manifest.py to verify functionality."
+      },
+      {
+        "id": "P5-TPL-01",
+        "title": "Define User-Defined Templates Mechanism for AI",
+        "type": "Feature",
+        "scope": ["Agentic System", "Code System (Target)", "Meta-Evolutionary"],
+        "description": "Design and implement a mechanism allowing an AI agent (on behalf of the user) to specify custom templates or override default Khora extension templates during project scaffolding.",
+        "acceptance_criteria": [
+          "The `[tool.khora.templates]` section in `pyproject.toml` is defined to allow mapping specific default templates to user-provided paths (e.g., `fastapi_scaffold.main_py = \"custom_templates/fastapi_main.py.template\"`).",
+          "The `TemplateManager` (or equivalent in extensions) is updated to check for these overrides in the Khora manifest before falling back to default packaged templates.",
+          "The mechanism supports overriding templates for files generated by any Khora extension.",
+          "Path resolution for custom templates is relative to the project root or a specified custom template directory.",
+          "Clear documentation (for AI consumption) is provided on how to structure this configuration and where to place custom templates.",
+          "Error handling is implemented for missing or malformed custom templates (e.g., fall back to default with a warning).",
+          "Unit tests verify that custom templates are correctly used when specified and that fallbacks work."
+        ],
+        "dependencies": ["sdk/templates.py", "P5-REN-01"],
+        "status": "in_progress",
+        "notes": "Foundation work completed by enhancing the TemplateManager to handle different template types more robustly. The render_pyscaffold_template method now properly handles string.Template objects, which will be needed for user-defined templates. All template handling-related tests are now passing successfully."
+      },
+      {
+        "id": "P5-DEP-01",
+        "title": "Standardize on `uv` for Scaffolded Project Dependency Management",
+        "type": "Task",
+        "scope": ["DevRelSecOps (Target)", "Meta-Evolutionary"],
+        "description": "Standardize generated project artifacts and documentation to use `uv` as the primary tool for dependency management and task running, while maintaining compatibility for users who wish to use other tools.",
+        "acceptance_criteria": [
+          "Update all relevant file templates (`README.md` stubs, CI workflows like `ci_workflow_yml.template` and `playwright_workflow_yml.template`) to use `uv` commands for environment setup and running tasks (e.g., `uv pip install`, `uv run pytest`). This is largely in place but needs a full review.",
+          "Ensure generated `requirements.txt` files by extensions (e.g., FastAPI, Playwright) are simple lists compatible with `uv pip install -r`.",
+          "Update user-facing documentation (especially the AI-centric guide from P5-AI-DOC-01 and example project READMEs) to recommend and showcase `uv` usage.",
+          "Review the Khora Kernel's own development setup (`kernel-ci.yml`, internal dev docs if any) to ensure it consistently uses `uv`.",
+          "No lock files like `poetry.lock` or `pdm.lock` are generated by default in target projects. `uv.lock` may be generated by `uv` usage but Khora itself won't enforce it initially in templates."
+        ],
+        "dependencies": ["P5-REN-01", "P5-AI-DOC-01"],
+        "status": "todo"
+      },
+      {
+        "id": "P5-EX-CANONICAL-01",
+        "title": "Develop Canonical Example Project",
+        "type": "Task",
+        "scope": ["Agentic System", "Meta-Evolutionary"],
+        "description": "Create a comprehensive, well-documented canonical example project scaffolded using Khora Kernel (with a defined set of extensions). This project will serve as a reference for users and AI agents.",
+        "acceptance_criteria": [
+          "A new directory `examples/canonical_project_khora` is created.",
+          "A `pyproject.toml` with a representative `[tool.khora]` configuration for this canonical example is defined (e.g., FastAPI, Docker, CI, KG, Docs, Pre-commit, basic security).",
+          "The project is scaffolded using `khora create canonical_project_khora`.",
+          "The `README.md` of this canonical example is enhanced to explain its structure and how Khora was used to generate it.",
+          "Basic functional code is added to the scaffolded parts (e.g., a few more FastAPI endpoints, some example Markdown for KG).",
+          "The example project should pass all its own generated CI checks and pre-commit hooks.",
+          "This example is referenced in the AI-centric user guide (P5-AI-DOC-01)."
+        ],
+        "dependencies": ["P5-REN-01", "P5-AI-DOC-01", "P5-EXT-SET-01"],
+        "status": "todo"
+      },
+      {
+        "id": "P5-EXT-SET-01",
+        "title": "Research: Define Optimal Default Extension Set",
+        "type": "Research",
+        "scope": ["Meta-Evolutionary", "DevRelSecOps (Kernel)"],
+        "description": "Determine a 'good-enough' set of Khora extensions to recommend or enable by default for a typical new Python project, balancing completeness with initial simplicity. This will inform the canonical example and potentially a future simplified `khora init` flow.",
+        "acceptance_criteria": [
+          "Review existing extensions (Core, FastAPI, Docker, CI, KG, Pre-commit, Docs, Playwright, Terraform).",
+          "Analyze common Python project needs and best practices.",
+          "Propose 2-3 tiers of extension sets (e.g., 'minimal', 'web_service_recommended', 'full_devrelsecops').",
+          "Justify the inclusion/exclusion of extensions in each tier.",
+          "Document findings in `docs/research/default_extension_sets.md`.",
+          "The 'web_service_recommended' or similar tier will be used for P5-EX-CANONICAL-01."
+        ],
+        "dependencies": ["P5-REN-01"],
+        "status": "todo"
+      },
+      {
+        "id": "P5-TECHDEBT-01",
+        "title": "Address Minor Technical Debt from Phase 4",
+        "type": "Task",
+        "scope": ["Meta-Evolutionary"],
+        "description": "Address known minor technical debt items identified during or at the end of Phase 4, such as the `ast.Str` deprecation.",
+        "acceptance_criteria": [
+          "Update `fastapi_scaffold/extension.py` to use `ast.Constant` instead of `ast.Str` for string literals in AST parsing, resolving deprecation warnings.",
+          "Review other codebase areas for any similar minor deprecations or easily fixable small issues noted in P4.",
+          "All tests pass after changes."
+        ],
+        "dependencies": ["P4-AI-01", "P5-REN-01"],
+        "status": "done",
+        "notes": "Improved template system by enhancing the render_pyscaffold_template method to handle string.Template objects properly. Fixed template rendering issues in the DocsExtension. Updated fastapi_scaffold/extension.py to use ast.Constant instead of ast.Str for AST parsing, resolving all deprecation warnings. All tests now pass successfully."
+      },
+      {
+        "id": "P5-TEST-INTEG",
+        "title": "Testing: Integration Tests for Phase 5 Features",
+        "type": "Task",
+        "scope": ["Meta-Evolutionary"],
+        "description": "Create and update integration tests to cover all new features and major refactors implemented in Phase 5.",
+        "acceptance_criteria": [
+          "Integration tests verify the project renaming (`khora-kernel`).",
+          "Integration tests verify manifest layering with environment-specific overrides.",
+          "CLI tests for `khora validate-manifest --json-output`, and JSON output for `health` and `inspect`.",
+          "Integration tests verify the user-defined templates mechanism.",
+          "Integration tests verify that scaffolded projects correctly use `uv` in CI and READMEs.",
+          "The canonical example project (P5-EX-CANONICAL-01) is used as a fixture or basis for some integration tests.",
+          "All existing integration tests are updated for the name change and continue to pass.",
+          "All Phase 5 integration tests pass reliably in the kernel's CI pipeline."
+        ],
+        "dependencies": [
+          "P5-REN-01", "P5-CONF-01", "P5-VALID-01", "P5-TPL-01", "P5-DEP-01", "P5-EX-CANONICAL-01", "P5-TECHDEBT-01"
+        ],
+        "status": "in_progress",
+        "notes": "Partially implemented: Created integration tests for manifest layering and environment-specific overrides in tests/test_env_manifest_integration.py. Added CLI tests for khora validate-manifest with JSON output in tests/cli/test_validate_manifest.py. Remaining integration tests are pending other dependencies."
+      }
+    ]
+  }

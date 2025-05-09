@@ -1,0 +1,49 @@
+# Variables for ${project_name} Terraform configuration
+
+variable "project_name" {
+  description = "Name of the project"
+  type        = string
+  default     = "${project_name}"
+}
+
+variable "environment" {
+  description = "Environment (e.g., dev, staging, prod)"
+  type        = string
+  default     = "dev"
+}
+
+variable "region" {
+  description = "Cloud provider region"
+  type        = string
+  default     = "us-west-2" # Default AWS region, adjust as needed
+}
+
+# Example variable for cloud provider credentials
+# Note: In practice, use environment variables or other secure methods
+# to provide credentials and sensitive information
+variable "credentials_file" {
+  description = "Path to the credentials file"
+  type        = string
+  default     = "~/.credentials" # Change based on your needs
+}
+
+# Example resource configuration variables
+variable "instance_type" {
+  description = "Type of compute instance"
+  type        = string
+  default     = "small" # Replace with actual instance type for your cloud provider
+}
+
+variable "vpc_cidr" {
+  description = "CIDR block for the VPC"
+  type        = string
+  default     = "10.0.0.0/16"
+}
+
+variable "subnet_cidrs" {
+  description = "CIDR blocks for the subnets"
+  type        = list(string)
+  default     = ["10.0.1.0/24", "10.0.2.0/24", "10.0.3.0/24"]
+}
+
+# Add more variables as needed for your infrastructure

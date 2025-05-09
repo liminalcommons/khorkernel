@@ -1,0 +1,48 @@
+"""
+Sample Playwright UI test for ${project_name}
+"""
+import pytest
+from playwright.sync_api import Page, expect
+
+
+def test_basic_navigation(page: Page):
+    """Test basic navigation to a webpage."""
+    # Navigate to a URL
+    page.goto("https://example.com")
+    
+    # Basic assertions
+    expect(page).to_have_title("Example Domain")
+    expect(page.get_by_text("Example Domain")).to_be_visible()
+    
+    # Take a screenshot (useful for debugging)
+    page.screenshot(path="test-results/example-page.png")
+
+
+def test_interaction_example(page: Page):
+    """Test interaction with UI elements."""
+    # Navigate to a form page
+    page.goto("https://example.org")
+    
+    # Example interactions
+    # Fill a form field
+    # page.fill("#search", "test query")
+    
+    # Click a button
+    # page.click("#submit-button")
+    
+    # Check for expected results
+    # expect(page.get_by_text("Results for: test query")).to_be_visible()
+
+
+@pytest.mark.skip(reason="This test requires API to be running")
+def test_api_integration(page: Page):
+    """Test integration with API - placeholder to be customized."""
+    # Navigate to local API docs if service is running
+    # Replace with actual API URL
+    page.goto("http://localhost:8000/docs")
+    
+    # Basic assertions for API documentation page
+    # expect(page).to_have_title("API Documentation")
+    
+    # This is a placeholder - customize based on actual API
+    pass

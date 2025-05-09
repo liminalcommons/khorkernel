@@ -1,0 +1,27 @@
+# {{ project_name }}
+
+{{ project_description }}
+
+## Installation
+
+```bash
+pip install {{ project_name }}
+```
+
+## Usage
+
+```python
+import {{ project_name.replace("-", "_") }}
+
+# Add code example here
+```
+
+## Features
+
+* Feature 1
+* Feature 2
+* Feature 3
+
+## License
+
+This project is licensed under the terms of the LICENSE file included in this repository.

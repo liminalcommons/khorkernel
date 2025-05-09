@@ -1,0 +1,19 @@
+# Environment-specific Terraform variable values for ${project_name} in ${env_name} environment
+
+# Basic configuration
+project_name = "${project_name}"
+region       = "$${env_name == "prod" ? "us-west-2" : "us-west-2"}"  # Example: use different regions for different environments
+
+# Resource configuration
+instance_type = "$${env_name == "prod" ? "large" : "small"}"
+vpc_cidr      = "10.0.0.0/16"
+subnet_cidrs  = $${env_name == "prod" ? 
+  '["10.0.1.0/24", "10.0.2.0/24", "10.0.3.0/24", "10.0.4.0/24"]' : 
+  '["10.0.1.0/24", "10.0.2.0/24"]'}
+
+# Environment-specific settings
+# Add settings that differ between environments here
+
+# ${env_name}-specific configuration
+# prod: add high availability settings, backup configurations, etc.
+# dev: add developer-friendly settings, debugging options, etc.

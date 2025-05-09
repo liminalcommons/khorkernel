@@ -1,0 +1,13 @@
+# Terraform variable values for ${project_name}
+# Values provided here override the defaults in variables.tf
+
+project_name    = "${project_name}"
+environment     = "dev"
+region          = "us-west-2"  # Default AWS region, adjust as needed
+
+# Example resource configuration
+instance_type   = "small"
+vpc_cidr        = "10.0.0.0/16"
+subnet_cidrs    = ["10.0.1.0/24", "10.0.2.0/24", "10.0.3.0/24"]
+
+# Add more variable values as needed for your infrastructure

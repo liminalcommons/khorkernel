@@ -1,0 +1,174 @@
+{
+    "description": "Phase 2 (v0.2) Development Tickets for Khora Kernel vNext (PyScaffold Adaptation)",
+    "tickets": [
+      {
+        "id": "P2-KG-01",
+        "title": "KG Extension: Implement KG Extraction Logic",
+        "type": "Feature",
+        "scope": ["Agentic System", "Meta-Evolutionary"],
+        "description": "As a Kernel Developer, I need a `khora-kg-extension` that replicates the core logic of the original `populate_kg.py`, scanning markdown files for `[concept:]` and `[rule:]` tags and generating `kg/concepts.json` and `kg/rules.json`.",
+        "acceptance_criteria": [
+          "A new PyScaffold extension `khora-kg-extension` is created and registered.",
+          "The extension provides a mechanism (e.g., an action or a callable function) to scan directories specified in `[tool.khora.paths].docs_dir` (and potentially project root).",
+          "It correctly parses `[concept:Name] – Description` and `[rule:Name] – Description` using regex.",
+          "It writes the extracted data into `kg/concepts.json` and `kg/rules.json` according to the `kg_schema.json`.",
+          "Includes basic validation (CamelCase, non-empty description) and duplicate warnings.",
+          "Unit tests verify parsing and JSON generation for various Markdown inputs.",
+          "Verified by integration tests in P2-TEST-INTEG."
+        ],
+        "dependencies": ["MVK-CORE-01"],
+        "status": "pending_verification",
+        "completion_date": "2025-05-08",
+        "notes": "Code implemented, requires verification via P2-TEST-INTEG."
+      },
+      {
+        "id": "P2-KG-02",
+        "title": "Core Extension: Integrate KG Summary into `context.yaml`",
+        "type": "Feature",
+        "scope": ["Agentic System", "Meta-Evolutionary"],
+        "description": "As a Kernel Developer, I need to enhance the `khora-core-extension`'s context generation action to include summary information from the KG files (`concepts.json`, `rules.json`).",
+        "acceptance_criteria": [
+          "The `_generate_khora_context_yaml` action in `khora-core-extension` is modified.",
+          "It attempts to load `kg/concepts.json` and `kg/rules.json`.",
+          "If files exist, it calculates their SHA1 hashes and counts the number of entries.",
+          "The `knowledge_graph_summary` section in `.khora/context.yaml` is populated with `concepts_hash`, `rules_hash`, `concept_count`, `rule_count`, `source_dir`, and `last_updated` timestamp.",
+          "Handles cases where KG files are missing gracefully.",
+          "Unit tests verify the correct population of the `knowledge_graph_summary` section.",
+          "Integration tests (`P2-TEST-INTEG`) verify the section appears correctly in the generated `context.yaml`."
+        ],
+        "dependencies": ["MVK-CORE-03", "P2-KG-01"],
+        "status": "pending_verification",
+        "completion_date": "2025-05-08",
+        "notes": "Code implemented, requires verification via P2-TEST-INTEG."
+      },
+      {
+        "id": "P2-KG-03",
+        "title": "Pre-commit: Add Hook for KG Population",
+        "type": "Task",
+        "scope": ["DevRelSecOps (Target)", "Meta-Evolutionary"],
+        "description": "As a Kernel Developer, I need to ensure the KG population logic runs automatically via pre-commit hooks when Markdown files change.",
+        "acceptance_criteria": [
+          "The `khora-precommit-extension` adds a local hook to the generated `.pre-commit-config.yaml`.",
+          "This hook executes the KG population mechanism (e.g., `python -m khora_kernel_vnext.extensions.kg.kg_precommit`).",
+          "The hook is configured to run when relevant Markdown files (`*.md`) are staged.",
+          "Integration tests (`P2-TEST-INTEG`) verify the presence and configuration of this hook."
+        ],
+        "dependencies": ["MVK-FEAT-04", "P2-KG-01"],
+        "status": "pending_verification",
+        "completion_date": "2025-05-08",
+        "notes": "Code implemented in `khora-precommit-extension`, requires verification via P2-TEST-INTEG."
+      },
+      {
+        "id": "P2-DOCKER-01",
+        "title": "Docker Extension: Add Configurable DB Service (Postgres/SQLite)",
+        "type": "Feature",
+        "scope": ["DevRelSecOps (Target)"],
+        "description": "As a Kernel Developer, I need the `khora-docker-extension` to optionally add a PostgreSQL or configure SQLite volume persistence in `docker-compose.yml` based on the manifest.",
+        "acceptance_criteria": [
+          "A `[tool.khora.features].database` option is added to `KhoraManifestConfig`.",
+          "The `khora-docker-extension` action reads this feature flag.",
+          "If `database == \"postgres\"`, a PostgreSQL service, volume, health check, `depends_on`, and `DATABASE_URL` are correctly added to `docker-compose.yml`.",
+          "If `database == \"sqlite\"`, a volume is defined, mounted by the API service, and the correct `DATABASE_URL` is added.",
+          "Unit tests verify the conditional generation logic for the `docker-compose.yml` content.",
+          "Integration tests (`P2-TEST-INTEG`) verify the correct services/volumes appear based on manifest settings."
+        ],
+        "dependencies": ["MVK-FEAT-02"],
+        "status": "pending_verification",
+        "completion_date": "2025-05-08",
+        "notes": "Code implemented, requires verification via P2-TEST-INTEG."
+      },
+      {
+        "id": "P2-DOCKER-02",
+        "title": "Docker Extension: Add Configurable Broker Service (Redis)",
+        "type": "Feature",
+        "scope": ["DevRelSecOps (Target)"],
+        "description": "As a Kernel Developer, I need the `khora-docker-extension` to optionally add a Redis service in `docker-compose.yml` based on the manifest.",
+        "acceptance_criteria": [
+          "A `[tool.khora.features].broker` option is added to `KhoraManifestConfig`.",
+          "The `khora-docker-extension` action reads this flag.",
+          "If `broker == \"redis\"`, a Redis service, health check, `depends_on`, and `REDIS_URL` are correctly added to `docker-compose.yml` and relevant services.",
+          "Unit tests verify the conditional generation logic.",
+          "Integration tests (`P2-TEST-INTEG`) verify the correct service appears based on manifest settings."
+        ],
+        "dependencies": ["MVK-FEAT-02"],
+        "status": "pending_verification",
+        "completion_date": "2025-05-08",
+        "notes": "Code implemented, requires verification via P2-TEST-INTEG."
+      },
+      {
+        "id": "P2-SEC-01",
+        "title": "CI Extension: Integrate Security Gates into CI Workflow",
+        "type": "Feature",
+        "scope": ["DevRelSecOps (Target)", "Meta-Evolutionary"],
+        "description": "As a Kernel Developer, I need the `khora-ci-github-actions-extension` to optionally include steps for security scanning tools in the generated `ci.yml`.",
+        "acceptance_criteria": [
+          "A `[tool.khora.features].security_gates` boolean flag is added to `KhoraManifestConfig`.",
+          "The `khora-ci-github-actions-extension` reads this flag.",
+          "If true, steps for `pip-audit` (or `uv audit`), `bandit`, and `trufflehog` are added to `ci.yml`.",
+          "Steps use sensible defaults.",
+          "Integration tests (`P2-TEST-INTEG`) verify the conditional inclusion of these steps in `ci.yml`."
+        ],
+        "dependencies": ["MVK-FEAT-03"],
+        "status": "pending_verification",
+        "completion_date": "2025-05-08",
+        "notes": "Code implemented, requires verification via P2-TEST-INTEG."
+      },
+      {
+        "id": "P2-SEC-02",
+        "title": "Pre-commit: Integrate Security Gates into Pre-commit Config",
+        "type": "Task",
+        "scope": ["DevRelSecOps (Target)", "Meta-Evolutionary"],
+        "description": "As a Kernel Developer, I need to ensure security tools (like TruffleHog, Bandit) are included in the generated `.pre-commit-config.yaml` when security gates are enabled.",
+        "acceptance_criteria": [
+          "The `khora-precommit-extension` reads `[tool.khora.features].security_gates`.",
+          "If true, hooks for `trufflehog` and `bandit` are added to `.pre-commit-config.yaml`.",
+          "Integration tests (`P2-TEST-INTEG`) verify the conditional inclusion of these hooks."
+        ],
+        "dependencies": ["MVK-FEAT-04", "P2-SEC-01"],
+        "status": "pending_verification",
+        "completion_date": "2025-05-08",
+        "notes": "Code implemented in `khora-precommit-extension`, requires verification via P2-TEST-INTEG."
+      },
+      {
+        "id": "P2-VER-01",
+        "title": "CLI/Core: Implement `khora bump-version` Command",
+        "type": "Feature",
+        "scope": ["Meta-Evolutionary", "DevRelSecOps (Kernel & Target)"],
+        "description": "As a Kernel Developer/User, I need a CLI command `khora bump-version --new <version> [--changelog]` to update the project's version consistently.",
+        "acceptance_criteria": [
+          "A new `bump-version` subcommand is added to the main `khora` CLI application.",
+          "The command takes `--new` version and optional `--changelog` arguments.",
+          "Validates new version format (X.Y.Z) and ensures it's higher than current version.",
+          "Updates `[project].version` in `pyproject.toml`.",
+          "If `--changelog` is specified, adds a new section to `CHANGELOG.md`.",
+          "Unit tests verify version validation, file updates, and changelog modification."
+        ],
+        "dependencies": ["MVK-META-01"],
+        "status": "todo",
+        "next_task_prompt": "Implement the `khora bump-version` command. Decide if it primarily targets the generated project's version or the kernel's internal version (Recommendation: Target project version)."
+      },
+      {
+        "id": "P2-TEST-INTEG",
+        "title": "Testing: Expand Integration Tests for v0.2 Features",
+        "type": "Task",
+        "scope": ["Meta-Evolutionary"],
+        "description": "As a Kernel Developer, I need to expand the integration test suite to cover the features added in Phase 2.",
+        "acceptance_criteria": [
+          "New integration test cases created or existing ones modified.",
+          "Tests use fixture projects with manifests enabling combinations of v0.2 features.",
+          "Assertions verify correct conditional generation of KG artifacts, `context.yaml` KG summary, Docker services/volumes, CI security steps, and pre-commit security/KG hooks.",
+          "All Phase 2 integration tests pass reliably.",
+          "The `khora bump-version` command is tested."
+        ],
+        "dependencies": [
+          "P2-KG-01", "P2-KG-02", "P2-KG-03",
+          "P2-DOCKER-01", "P2-DOCKER-02",
+          "P2-SEC-01", "P2-SEC-02",
+          "P2-VER-01"
+        ],
+        "status": "todo",
+        "notes": "This is the final verification step for Phase 2. Requires all features to be implemented first.",
+        "next_task_prompt": "All Phase 2 features implemented and verified. Phase 2 complete. Proceed to planning Phase 3."
+      }
+    ]
+  }
