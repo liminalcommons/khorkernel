@@ -1,83 +1,79 @@
 # Khora Kernel
 
-[![Tests](https://github.com/khor-ai/khora-kernel/actions/workflows/python-app.yml/badge.svg)](https://github.com/khor-ai/khora-kernel/actions/workflows/python-app.yml)
+## Overview
 
-Khora Kernel is a powerful scaffolding system for Khora projects built using the PyScaffold framework as the foundation. It aims to provide a simplified and more powerful scaffolding system for Khora projects.
+Khora Kernel is a powerful scaffolding system designed to simplify and enhance the creation of Khora projects. Built upon PyScaffold, it enables the quick setup of well-structured Python projects with pre-configured components. Khora Kernel promotes a streamlined development workflow through its extensible architecture, a machine-readable context model, automatic knowledge graph generation, standard pre-built components, and environment-specific configurations.
 
 ## Features
 
-- **PyScaffold-Based**: Leverages the powerful PyScaffold framework
-- **Extensions**: Plugin system for project customization
-- **Context Model**: Generated projects include machine-readable context.yaml
-- **Knowledge Graph**: Automatic knowledge graph generation from project content
-- **Standard Components**: Pre-built components for common use cases
-- **Environment Layering**: Support for environment-specific configurations (dev, test, prod)
+*   **Rapid Project Scaffolding:** Quickly generate new Khora projects with a standardized structure.
+*   **Extensible Architecture:** A robust plugin system (extensions) allows for the addition of features like FastAPI integration, Docker support, CI/CD pipelines, and more.
+*   **Environment-Specific Configurations:** Manage different configurations for various environments (e.g., development, testing, production) seamlessly.
+*   **Machine-Readable Context:** Automatically generates a `.khora/context.yaml` file containing project metadata, facilitating automation and integration.
+*   **Knowledge Graph Generation:** Automatically creates a knowledge graph from the project's content, offering insights and aiding documentation.
+*   **Comprehensive CLI:** A user-friendly command-line interface (`khora`) for managing projects.
+*   **Developer SDK:** Provides tools and guidelines for creating custom extensions to tailor Khora Kernel to specific needs.
 
-## Installation
+## Getting Started
 
-```bash
-pip install -e .
-```
+### Prerequisites
+
+*   Python 3.12 or higher.
+
+### Installation
+
+1.  Clone the repository:
+    ```bash
+    git clone <repository-url>
+    ```
+2.  Navigate to the project directory:
+    ```bash
+    cd khora-kernel
+    ```
+3.  Install the package in editable mode (which includes all core and development dependencies):
+    ```bash
+    pip install -e .
+    ```
+
+    Core dependencies include: `pyyaml`, `jinja2`, `typer`, `pyscaffold`, `pydantic`, `click`, `tomlkit`.
+    Development dependencies include: `pytest`, `hatchling`, `ruff`, `black`, `mypy`, `pre-commit`.
+    All dependencies are listed in the [`pyproject.toml`](khora-kernel/pyproject.toml:0) file.
 
 ## Usage
 
-### Create a New Project
+Khora Kernel is primarily used via its command-line interface, `khora`.
 
-```bash
-khora create my-project
-```
+## CLI Commands
 
-### Add Extensions
+The `khora` CLI provides several commands to manage your projects:
 
-```bash
-khora create my-project --fastapi --docker --ci-github-actions
-```
+*   **`khora create <project-name>`**:
+    *   Scaffolds a new Khora project.
+    *   Example: `khora create my-awesome-project`
+*   **`khora list-extensions`**:
+    *   Lists all available extensions that can be added to a project.
+*   **`khora health`**:
+    *   Performs health checks on the Khora Kernel environment or a specific project.
+*   **`khora inspect`**:
+    *   Provides detailed information about a Khora project's configuration and structure.
+*   **`khora validate-manifest`**:
+    *   Validates the project's manifest file (`.khora/context.yaml`).
 
-### Use Environment-Specific Configuration
+## Extensibility
 
-```bash
-khora create my-project --khora-env dev
-khora health --khora-env prod
-khora validate-manifest --khora-env staging
-```
+Khora Kernel's functionality can be extended using a plugin system. Extensions can add new features, commands, or integrations.
 
-### List Available Extensions
+*   **Activating Extensions:** Extensions are typically activated during project creation using flags.
+    *   Example: `khora create my-project --fastapi` (to include the FastAPI extension).
+*   **Listing Extensions:** Use `khora list-extensions` to see all available plugins.
 
-```bash
-khora list-extensions
-```
+## Environment-Specific Configurations
 
-## Documentation
+Manage different settings for various deployment or development environments using the [`pyproject.toml`](khora-kernel/pyproject.toml:0) file.
 
-- [SDK Documentation](docs/sdk/README.md)
-- [Plugin Development Guide](docs/sdk/plugin_development_guide.md)
-- [API Reference](docs/sdk/api_reference.md)
-- [AI Guides](docs/ai_guide/README.md) - Documentation optimized for AI assistants
-
-### Research
-
-- [Manifest Layering Proposal](docs/research/manifest_layering_proposal.md)
-- [Performance Profiling](docs/research/performance_profiling.md)
-- [Cross-Platform Compatibility](docs/research/cross_platform_compatibility.md)
+*   Configurations are defined under the `[tool.khora.env.<env_name>]` section.
+*   Activate a specific environment configuration using the `--khora-env <env_name>` flag with `khora` commands.
 
 ## Developer SDK
 
-Khora Kernel includes a comprehensive SDK for developing extensions:
-
-```python
-from khora_kernel.sdk import KhoraExtension
-
-class MyAwesomeExtension(KhoraExtension):
-    name = "my_awesome"
-    
-    def activate(self, actions):
-        # Register actions
-        actions = self.register(actions, my_action, after="define_structure")
-        return actions
-```
-
-See the documentation for full details and the [Examples](examples/) for complete sample extensions.
-
-## License
-
-MIT
+Khora Kernel includes a Software Development Kit (SDK) for creating custom extensions. This allows developers to build new functionalities and integrate them seamlessly into the Khora ecosystem. Refer to the SDK documentation for more details on developing your own extensions.
